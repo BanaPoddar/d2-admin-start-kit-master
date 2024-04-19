@@ -97,7 +97,7 @@ Vue.component('SplitPane', SplitPane)
 export default {
   data () {
     return {
-      videoFeedUrl: '/api/video_feed',// 后端Flask接口地址
+      videoFeedUrl: '/api/camera/pose', // 后端Flask接口地址
       participants: [
         { i: '1' },
         { i: '2' },

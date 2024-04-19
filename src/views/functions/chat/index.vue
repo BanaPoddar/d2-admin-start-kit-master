@@ -16,7 +16,7 @@
             <el-tag size="mini" type="info" slot="header"> {{item.i}}智慧语音助手</el-tag>
             <div>
               <vue-advanced-chat
-                height="calc(100vh - 300px)"
+                height="calc(100vh - 240px)"
                 :current-user-id="currentUserId"
                 :rooms="JSON.stringify(rooms)"
                 :rooms-loaded="true"
@@ -29,28 +29,26 @@
           </template>
           <template v-if="item.i === '1'">
             <el-tag size="mini" type="info" slot="header">{{item.i}}待抓取物品列表 </el-tag>
-            <!--加入一个列表 显示编号、图片、物体类别、置信度、坐标、操作-->
-            <el-table :data="tableData" style="width: 100%">
-              <el-table-column prop="id" label="编号" width="80"></el-table-column>
-              <el-table-column prop="image" label="图片" width="100">
-                <template slot-scope="scope">
-                  <img :src="scope.row.image" style="width: 100%; height: 100%;" />
-                </template>
-              </el-table-column>
-              <el-table-column prop="category" label="物体类别" width="100"></el-table-column>
-              <el-table-column prop="confidence" label="置信度" width="100"></el-table-column>
-              <el-table-column prop="coordinate" label="坐标" width="100"></el-table-column>
-              <el-table-column label="操作" width="100">
-                <template slot-scope="scope">
-                  <el-button type="text" size="small" @click="grasp(scope.$index, scope.row)">抓取</el-button>
-                </template>
-              </el-table-column>
-            </el-table>
+            <div class="item-list" style="display: flex;flex-direction: column;overflow-y: auto;height: 100%;">
+              <el-card v-for="item in itemList" :key="item.id" class="item-card">
+                <div class="item-content">
+                  <img :src="item.imageURL" class="item-image" />
+                  <div class="item-details">
+                    <p><strong>编号:</strong> {{ item.id }}</p>
+                    <p><strong>物品名称:</strong> {{ item.class }}</p>
+                    <p><strong>置信度:</strong> {{ item.confidence }}</p>
+                    <p><strong>位置:</strong> {{ item.position }}</p>
+                  </div>
+                  <el-button type="primary" @click="graspItem(item.id)" style="margin-left: 20px">抓取</el-button>
+                </div>
+              </el-card>
+            </div>
           </template>
           <template v-if="item.i === '2'">
             <el-tag size="mini" type="info" slot="header">{{item.i}}物品摄像头画面</el-tag>
-            <div style="margin: 10px;">
-              <img :src="videoFeedUrl" style="width: 100%; height: 100%;" />
+            <div style="text-align: center;">
+              <!--图像居中,设置最大宽度为100px-->
+              <img :src="videoFeedUrl" style="max-width: 80%; height: auto;" />
             </div>
           </template>
         </el-card>
@@ -90,6 +88,7 @@ import Vue from 'vue'
 import { register } from 'vue-advanced-chat'
 import robotIamge from '@/assets/images/robot.png'
 import { GridLayout, GridItem } from 'vue-grid-layout'
+import axios from 'axios'
 Vue.component('d2-grid-layout', GridLayout)
 Vue.component('d2-grid-item', GridItem)
 register()
@@ -97,11 +96,12 @@ export default {
   name: 'chatControl',
   data () {
     return {
+      itemList: [],
       layout: {
         layout: [
-          { x: 0, y: 0, w: 7, h: 28, i: '0' },
-          { x: 7, y: 0, w: 5, h: 14, i: '1' },
-          { x: 7, y: 10, w: 5, h: 14, i: '2' }
+          { x: 0, y: 0, w: 7, h: 20, i: '0' },
+          { x: 7, y: 0, w: 5, h: 9, i: '2' },
+          { x: 7, y: 10, w: 5, h: 11, i: '1' }
         ],
         colNum: 12,
         rowHeight: 30,
@@ -152,7 +152,7 @@ export default {
       }, // specifies the color scheme for the component
       alwaysScrollToBottom: false, // when set to true always scrolls the chat to the bottom when new events are in (new message, user starts typing...)
       messageStyling: true, // when set to true allows the use of html in the messages
-      videoFeedUrl: '/api/video_feed', // 后端Flask接口地址
+      videoFeedUrl: 'api/camera/depth', // 后端Flask接口地址
       currentUserId: '2', // vue-advanced-chat
       rooms: [
         {
@@ -181,8 +181,32 @@ export default {
   mounted () {
     // 加载完成后显示提示
     this.showInfo()
+    this.fetchItems()
   },
   methods: {
+    fetchItems () {
+      axios.get('/api/grasp/getRecognizedItems')
+        .then(response => {
+          // eslint-disable-next-line no-undef
+          const responseData = JSON.parse(response.data.data)
+          const items = Array.isArray(responseData) ? responseData : []
+          // 更新 itemList
+          this.itemList = items.map(item => ({
+            id: item.id,
+            class: item.class,
+            color: item.color,
+            position: item.position,
+            confidence: item.confidence,
+            imageURL: 'data:image/png;base64,' + item.image // 假设 "image" 包含 Base64 编码的图像数据
+          }))
+        })
+        .catch(error => {
+          console.error(error)
+        })
+    },
+    graspItem (itemId) {
+      // 处理抓取物品的逻辑
+    },
     log (arg1 = 'log', ...logs) {
       if (logs.length === 0) {
         console.log(arg1)
@@ -282,19 +306,38 @@ export default {
           date: new Date().toDateString()
         }
       ]
-      // 将消息发送给后端
-
+      // 将消息通过axios发送给后端
+      axios.post('/api/chat/startchat', {
+        commandStr: message.content
+      }).then(response => {
+        console.log(response.data)
+        const reply = response.data.reply
+        reply.forEach(element => {
+          this.messages = [
+            ...this.messages,
+            {
+              _id: this.messages.length + 1, // 确保ID是唯一的
+              content: element, // 回复的消息内容
+              senderId: '1', // 这里应该是机器人或者服务器的ID
+              timestamp: new Date().toString().substring(16, 21),
+              date: new Date().toDateString()
+            }
+          ]
+        })
+      }).catch(error => {
+        console.log(error)
+      })
       if (message.content === '你好') {
         this.messages = [
           ...this.messages,
           {
             _id: this.messages.length + 1, // 确保ID是唯一的
             content: '你好', // 回复的消息内容
-            senderId: '4321', // 这里应该是机器人或者服务器的ID
+            senderId: '1', // 这里应该是机器人或者服务器的ID
             timestamp: new Date().toString().substring(16, 21),
             date: new Date().toDateString()
           }
-        ];
+        ]
       }
     },
     addNewMessage () {
@@ -332,5 +375,46 @@ export default {
       }
     }
   }
+  .item-list {
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    height: 100%;
+  }
+
+  .item-card {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    margin-bottom: 10px;
+    border: 1px solid #ebeef5;
+    border-radius: 4px;
+  }
+
+  .item-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .item-image {
+    width: 100px;
+    height: 100px;
+    object-fit: cover;
+    margin-right: 10px;
+  }
+
+  .item-details {
+    flex: 1;
+  }
+
+  .item-details p {
+    margin: 5px 0;
+  }
+
+  .item-details p strong {
+    font-weight: bold;
+  }
 }
+
 </style>
