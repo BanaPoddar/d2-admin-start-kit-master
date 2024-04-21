@@ -13,25 +13,70 @@
         @moved="movedHandler">
         <el-card shadow="never" class="page_card">
           <template v-if="item.i === '0'">
-            <el-tag size="mini" type="info" slot="header"> {{item.i}}智慧语音助手</el-tag>
-            <div class="d2-mb">拖拽卡片调整位置</div>
-            <div class="d2-mb">拖拽卡片右下角的手柄调整卡片大小</div>
-            <div class="d2-mb">在控制台打印出数据变化</div>
-            <d2-icon name="github" style="font-size: 100px;"/>
+            <div class="center-bold">机械臂位置(m)</div>
+            <div class="data-display-container">
+              <home-robot-data value="0" label="X" style="width: 33%" />
+              <home-robot-data value="0" label="Y" style="width: 33%"/>
+              <home-robot-data value="0" label="Z" style="width: 33%"/>
+            </div>
           </template>
           <template v-if="item.i === '1'">
-            <el-tag size="mini" type="info" slot="header">{{item.i}}待抓取物品列表 </el-tag>
-            <div class="d2-mb">拖拽卡片调整位置</div>
-            <div class="d2-mb">拖拽卡片右下角的手柄调整卡片大小</div>
-            <div class="d2-mb">在控制台打印出数据变化</div>
-            <d2-icon name="github" style="font-size: 100px;"/>
+            <div class="center-bold">机械臂姿态(deg)</div>
+            <div class="data-display-container">
+              <home-robot-data value="0" label="DX" style="width: 33%" />
+              <home-robot-data value="0" label="DY" style="width: 33%"/>
+              <home-robot-data value="0" label="DZ" style="width: 33%"/>
+            </div>
           </template>
           <template v-if="item.i === '2'">
-            <el-tag size="mini" type="info" slot="header">{{item.i}}物品摄像头画面</el-tag>
-            <div class="d2-mb">拖拽卡片调整位置</div>
-            <div class="d2-mb">拖拽卡片右下角的手柄调整卡片大小</div>
-            <div class="d2-mb">在控制台打印出数据变化</div>
-            <d2-icon name="github" style="font-size: 100px;"/>
+              <div class="box-content">
+                  <div class="slider-block">
+                    <div class="slider-item">
+                      <p class="demonstration">关节1</p>
+                      <el-slider v-model="joint1" show-input :min="min" :max="max" :step="0.01" @input="sliderInput($event, '1', 'y')" />
+                    </div>
+                    <div class="slider-item">
+                      <p class="demonstration">关节2</p>
+                      <el-slider v-model="joint2" show-input :min="min" :max="max" :step="0.01" @input="sliderInput($event, '2', 'x')" />
+                    </div>
+                    <div class="slider-item">
+                      <p class="demonstration">关节3</p>
+                      <el-slider v-model="joint3" show-input :min="min" :max="max" :step="0.01" @input="sliderInput($event, '3', 'x')" />
+                    </div>
+
+                    <div class="slider-item">
+                      <p class="demonstration">关节4</p>
+                      <el-slider v-model="joint4" show-input :min="min" :max="max" :step="0.01" @input="sliderInput($event, '4', 'x')" />
+                    </div>
+                    <div class="slider-item">
+                      <p class="demonstration">关节5</p>
+                      <el-slider v-model="joint5" show-input :min="min" :max="max" :step="0.01" @input="sliderInput($event, '5', 'y')" />
+                    </div>
+                    <div class="slider-item">
+                      <p class="demonstration">关节6</p>
+                      <el-slider v-model="joint6" show-input :min="min" :max="max" :step="0.01" @input="sliderInput($event, '6', 'x')" />
+                    </div>
+                  </div>
+              </div>
+          </template>
+          <template v-if="item.i === '3'">
+            <div class="box-content">
+              <!-- three.js -->
+            </div>
+          </template>
+          <template v-if="item.i === '4'">
+            <div class="box-content">
+              <!-- 关节4-6数据 -->
+              <div>关节4 数据</div>
+              <div>关节5 数据</div>
+              <div>关节6 数据</div>
+            </div>
+          </template>
+          <template v-if="item.i === '5'">
+            <div class="box-content">
+              <!-- Echart 图表展示 -->
+              <div>Echart 图表</div>
+            </div>
           </template>
         </el-card>
       </d2-grid-item>
@@ -42,17 +87,25 @@
 <script>
 import Vue from 'vue'
 import { GridLayout, GridItem } from 'vue-grid-layout'
+import HomeRobotData from '@/components/HomeRobotData.vue'
 Vue.component('d2-grid-layout', GridLayout)
 Vue.component('d2-grid-item', GridItem)
 export default {
-  name: 'chatControl',
+  name: 'PageDemoPage1',
+  components: {
+    HomeRobotData
+  },
   data () {
     return {
+      myValue: 3.21,
       layout: {
         layout: [
-          { x: 0, y: 0, w: 7, h: 18, i: '0' },
-          { x: 7, y: 0, w: 5, h: 9, i: '1' },
-          { x: 7, y: 10, w: 5, h: 9, i: '2' }
+          { x: 0, y: 0, w: 6, h: 4, i: '0' },
+          { x: 6, y: 0, w: 6, h: 4, i: '1' },
+          { x: 0, y: 4, w: 3, h: 15, i: '2', isDraggable: false },
+          { x: 3, y: 4, w: 6, h: 15, i: '3' },
+          { x: 9, y: 4, w: 3, h: 15, i: '4' },
+          { x: 0, y: 16, w: 12, h: 9, i: '5' }
         ],
         colNum: 12,
         rowHeight: 30,
@@ -62,6 +115,16 @@ export default {
         verticalCompact: true,
         margin: [10, 10],
         useCssTransforms: true
+      },
+      machineArmPosition: {
+        x: 0,
+        y: 0,
+        z: 0
+      },
+      machineArmPose: {
+        dx: 0.123123,
+        dy: 0.123123,
+        dz: 0.123123
       }
     }
   },
@@ -121,6 +184,29 @@ export default {
     .page_card {
       height: 100%;
       @extend %unable-select;
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto; /* 启用垂直方向上的滚动条 */
+      .data-display-container {
+        display: flex;
+      }
+      .data-display {
+        flex: 1;
+      }
+      .JointAngle {
+        display: flex;
+        flex: 1;
+      }
+      .center-bold {
+        text-align: center;
+        font-weight: bold;
+        font-size: 20px; /* 你可以根据需要调整这个值 */
+      }
+      .demonstration {
+        /* 向右移动40px */
+        margin-LEFT: 100px;
+        font-size: 16px;
+      }
     }
     .vue-resizable-handle {
       opacity: .3;
@@ -129,5 +215,26 @@ export default {
       }
     }
   }
+}
+.chat-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.messages-display {
+  flex-grow: 1;
+  overflow-y: auto;
+}
+
+.input-area {
+  display: flex;
+  align-items: center;
+  padding: 10px;
+}
+
+.input-area textarea {
+  flex-grow: 1;
+  margin-right: 10px;
 }
 </style>

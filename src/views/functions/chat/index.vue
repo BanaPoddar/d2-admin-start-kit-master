@@ -1,16 +1,11 @@
 <template>
   <d2-container type="full" class="page">
     <d2-grid-layout
-      v-bind="layout"
-      @layout-updated="layoutUpdatedHandler">
+      v-bind="layout">
       <d2-grid-item
         v-for="(item, index) in layout.layout"
         :key="index"
-        v-bind="item"
-        @resize="resizeHandler"
-        @move="moveHandler"
-        @resized="resizedHandler"
-        @moved="movedHandler">
+        v-bind="item">
         <el-card shadow="never" class="page_card">
           <template v-if="item.i === '0'">
             <el-tag size="mini" type="info" slot="header"> {{item.i}}智慧语音助手</el-tag>
@@ -22,12 +17,13 @@
                 :rooms-loaded="true"
                 :messages="JSON.stringify(messages)"
                 :messages-loaded="messagesLoaded"
+                :show-audio="false"
                 @send-message="adcanced_sendMessage($event.detail[0])"
                 @fetch-messages="fetchMessages($event.detail[0])"
               />
             </div>
           </template>
-          <template v-if="item.i === '1'">
+          <template v-if="item.i === '1'" style ="display: flex;flex-direction: column;overflow-y: auto;height: 100%;">
             <el-tag size="mini" type="info" slot="header">{{item.i}}待抓取物品列表 </el-tag>
             <div class="item-list" style="display: flex;flex-direction: column;overflow-y: auto;height: 100%;">
               <el-card v-for="item in itemList" :key="item.id" class="item-card">
@@ -99,7 +95,7 @@ export default {
       itemList: [],
       layout: {
         layout: [
-          { x: 0, y: 0, w: 7, h: 20, i: '0' },
+          { x: 0, y: 0, w: 7, h: 20, i: '0', isDraggable: false },
           { x: 7, y: 0, w: 5, h: 9, i: '2' },
           { x: 7, y: 10, w: 5, h: 11, i: '1' }
         ],
@@ -222,28 +218,8 @@ export default {
     showInfo () {
       this.$notify({
         title: '提示',
-        message: '你可以按住卡片拖拽改变位置；或者在每个卡片的右下角拖动，调整卡片大小'
+        message: '欢迎使用语音助手!每个卡片可以随意拖动！'
       })
-    },
-    // 测试代码
-    layoutUpdatedHandler (newLayout) {
-      console.group('layoutUpdatedHandler')
-      newLayout.forEach(e => {
-        console.log(`{'x': ${e.x}, 'y': ${e.y}, 'w': ${e.w}, 'h': ${e.h}, 'i': '${e.i}'},`)
-      })
-      console.groupEnd()
-    },
-    resizeHandler (i, newH, newW) {
-      this.log('resizeHandler', `i: ${i}, newH: ${newH}, newW: ${newW}`)
-    },
-    moveHandler (i, newX, newY) {
-      this.log('moveHandler', `i: ${i}, newX: ${newX}, newY: ${newY}`)
-    },
-    resizedHandler (i, newH, newW, newHPx, newWPx) {
-      this.log('resizedHandler', `i: ${i}, newH: ${newH}, newW: ${newW}, newHPx: ${newHPx}, newWPx: ${newWPx}`)
-    },
-    movedHandler (i, newX, newY) {
-      this.log('movedHandler', `i: ${i}, newX: ${newX}, newY: ${newY}`)
     },
     sendMessage (text) {
       if (text.length > 0) {
@@ -367,6 +343,9 @@ export default {
     .page_card {
       height: 100%;
       @extend %unable-select;
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto; /* 启用垂直方向上的滚动条 */
     }
     .vue-resizable-handle {
       opacity: .3;
@@ -378,10 +357,9 @@ export default {
   .item-list {
     display: flex;
     flex-direction: column;
-    overflow-y: auto;
-    height: 100%;
+    overflow-y: auto; /* 启用垂直方向上的滚动条 */
+    height: 100%; /* 占据父容器的所有可用高度 */
   }
-
   .item-card {
     display: flex;
     align-items: center;
@@ -390,20 +368,17 @@ export default {
     border: 1px solid #ebeef5;
     border-radius: 4px;
   }
-
   .item-content {
     display: flex;
     align-items: center;
     justify-content: space-between;
   }
-
   .item-image {
     width: 100px;
     height: 100px;
     object-fit: cover;
     margin-right: 10px;
   }
-
   .item-details {
     flex: 1;
   }

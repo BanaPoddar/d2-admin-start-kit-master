@@ -17,15 +17,17 @@ const frameIn = [
         path: 'index',
         name: 'index',
         meta: {
+          title: '数据中心',
           auth: true
         },
-        component: _import('system/index')
+        component: _import('functions/home')
       },
       // 聊天页面
       {
         path: 'chat',
         name: 'chat',
         meta: {
+          title: '聊天助手',
           auth: true
         },
         component: _import('functions/chat')
@@ -50,17 +52,16 @@ const frameIn = [
         },
         component: _import('functions/sync')
       },
-      // 聊天页面
+      // 演示页面
       {
-        path: 'chat',
-        name: 'chat',
+        path: '3d',
+        name: '3d',
         meta: {
-          title: '聊天助手',
+          title: '3D模型',
           auth: true
         },
-        component: _import('functions/chat')
+        component: _import('demo/3dTest')
       },
-      // 演示页面
       {
         path: 'page1',
         name: 'page1',
