@@ -1,13 +1,11 @@
 <template>
-  <d2-container class="ghost">
-    <div class="common-layout">
-      <el-container>
-        <div id="webgl">
-          <Menu @sliderInput="sliderInput" />
-        </div>
-      </el-container>
-    </div>
-  </d2-container>
+  <div class="common-layout">
+    <el-container>
+      <div id="webgl">
+        <Menu @sliderInput="sliderInput" />
+      </div>
+    </el-container>
+  </div>
 </template>
 
 <script>
@@ -101,9 +99,16 @@ export default {
         this.robot.rotation.x = Math.PI / 2;
         this.robot.rotation.x *= -1;
         this.robot.position.x = 0;
-        this.robot.position.y = 0;
-        this.robot.position.z = 0;
-        this.scene.add(this.robot)
+        this.robot.position.y = 0.5;
+        this.robot.position.z = 1;
+        this.scene.add(this.robot);
+        // 设置关节初始角度
+        this.robot.joints['link1_joint'].setJointValue(-1.57);
+        this.robot.joints['link2_joint'].setJointValue(-1.57);
+        this.robot.joints['link3_joint'].setJointValue(1.57);
+        this.robot.joints['link4_joint'].setJointValue(0);
+        this.robot.joints['link5_joint'].setJointValue(0);
+        this.robot.joints['link6_joint'].setJointValue(0)
       })
     }
   }

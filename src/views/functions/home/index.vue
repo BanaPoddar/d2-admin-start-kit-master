@@ -23,40 +23,41 @@
               <home-robot-data :value="armPose.rz" label="RZ" style="width: 33%"/>
             </div>
           </template>
-          <template v-if="item.i === '2'">
-              <div class="box-content">
-                  <div class="slider-block">
-                    <div class="slider-item">
-                      <p class="demonstration">关节1</p>
-                      <el-slider v-model="joint1" show-input :min="min" :max="max" :step="0.01" @input="sliderInput($event, '1', 'y')" />
-                    </div>
-                    <div class="slider-item">
-                      <p class="demonstration">关节2</p>
-                      <el-slider v-model="joint2" show-input :min="min" :max="max" :step="0.01" @input="sliderInput($event, '2', 'x')" />
-                    </div>
-                    <div class="slider-item">
-                      <p class="demonstration">关节3</p>
-                      <el-slider v-model="joint3" show-input :min="min" :max="max" :step="0.01" @input="sliderInput($event, '3', 'x')" />
-                    </div>
-
-                    <div class="slider-item">
-                      <p class="demonstration">关节4</p>
-                      <el-slider v-model="joint4" show-input :min="min" :max="max" :step="0.01" @input="sliderInput($event, '4', 'x')" />
-                    </div>
-                    <div class="slider-item">
-                      <p class="demonstration">关节5</p>
-                      <el-slider v-model="joint5" show-input :min="min" :max="max" :step="0.01" @input="sliderInput($event, '5', 'y')" />
-                    </div>
-                    <div class="slider-item">
-                      <p class="demonstration">关节6</p>
-                      <el-slider v-model="joint6" show-input :min="min" :max="max" :step="0.01" @input="sliderInput($event, '6', 'x')" />
-                    </div>
-                  </div>
-              </div>
-          </template>
           <template v-if="item.i === '3'">
             <div class="box-content">
+              <div class="slider-block">
+                <div class="slider-item">
+                  <p class="demonstration">关节1</p>
+                  <el-slider v-model="joint1" show-input :min="min" :max="max" :step="0.01" @input="sliderInput($event, '1', 'y')" />
+                </div>
+                <div class="slider-item">
+                  <p class="demonstration">关节2</p>
+                  <el-slider v-model="joint2" show-input :min="min" :max="max" :step="0.01" @input="sliderInput($event, '2', 'x')" />
+                </div>
+                <div class="slider-item">
+                  <p class="demonstration">关节3</p>
+                  <el-slider v-model="joint3" show-input :min="min" :max="max" :step="0.01" @input="sliderInput($event, '3', 'x')" />
+                </div>
+
+                <div class="slider-item">
+                  <p class="demonstration">关节4</p>
+                  <el-slider v-model="joint4" show-input :min="min" :max="max" :step="0.01" @input="sliderInput($event, '4', 'x')" />
+                </div>
+                <div class="slider-item">
+                  <p class="demonstration">关节5</p>
+                  <el-slider v-model="joint5" show-input :min="min" :max="max" :step="0.01" @input="sliderInput($event, '5', 'y')" />
+                </div>
+                <div class="slider-item">
+                  <p class="demonstration">关节6</p>
+                  <el-slider v-model="joint6" show-input :min="min" :max="max" :step="0.01" @input="sliderInput($event, '6', 'x')" />
+                </div>
+              </div>
+            </div>
+          </template>
+          <template v-if="item.i === '2'">
+            <div class="box-content">
               <!-- three.js -->
+              <robot-model />
             </div>
           </template>
           <template v-if="item.i === '4'">
@@ -143,6 +144,8 @@ import { GridLayout, GridItem } from 'vue-grid-layout'
 import HomeRobotData from '@/components/HomeRobotData.vue'
 import { str2Date } from '@/libs/data'
 import axios from 'axios'
+import Menu from '@/components/RobotControl'
+import RobotModel from '@/components/robotModel'
 Vue.component('d2-grid-layout', GridLayout)
 Vue.component('d2-grid-item', GridItem)
 const DATA_FROM_BACKEND = {
@@ -168,7 +171,9 @@ const DATA_FROM_BACKEND = {
 export default {
   name: 'PageDemoPage1',
   components: {
-    HomeRobotData
+    HomeRobotData,
+    Menu,
+    RobotModel
   },
   data () {
     return {
@@ -177,10 +182,9 @@ export default {
         layout: [
           { x: 0, y: 0, w: 6, h: 4, i: '0' },
           { x: 6, y: 0, w: 6, h: 4, i: '1' },
-          { x: 0, y: 4, w: 3, h: 15, i: '2', isDraggable: false },
-          { x: 3, y: 4, w: 6, h: 15, i: '3' },
-          { x: 9, y: 4, w: 3, h: 15, i: '4' },
-          { x: 0, y: 16, w: 12, h: 14, i: '5' }
+          { x: 0, y: 4, w: 9, h: 15, i: '2', isDraggable: false },
+          { x: 9, y: 4, w: 3, h: 15, i: '3' },
+          { x: 0, y: 16, w: 12, h: 14, i: '4' }
         ],
         colNum: 12,
         rowHeight: 30,
@@ -398,7 +402,7 @@ export default {
       @extend %unable-select;
       display: flex;
       flex-direction: column;
-      /*overflow-y: auto; !* 启用垂直方向上的滚动条 *!*/
+      overflow-y: auto; /* 启用垂直方向上的滚动条 */
       .data-display-container {
         display: flex;
       }

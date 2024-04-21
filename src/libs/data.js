@@ -31,7 +31,7 @@ export function str2Date (dateStr, separator) {
   const year = parseInt(dateArr[0])
   let month
   // 处理月份为04这样的情况
-  if (dateArr[1].indexOf('0') == 0) {
+  if (dateArr[1].indexOf('0') === 0) {
     month = parseInt(dateArr[1].substring(1))
   } else {
     month = parseInt(dateArr[1])

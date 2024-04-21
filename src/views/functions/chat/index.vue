@@ -17,9 +17,16 @@
                 :rooms-loaded="true"
                 :messages="JSON.stringify(messages)"
                 :messages-loaded="messagesLoaded"
-                :show-audio="false"
+                :show-files="false"
+                :textarea-action-enabled="true"
+                :room-actions="JSON.stringify(roomsActions)"
+                :style="JSON.stringify(chatStyle)"
+                :templates-text="JSON.stringify(templatesText)"
+                :text-messages="JSON.stringify(textMessages)"
                 @send-message="adcanced_sendMessage($event.detail[0])"
                 @fetch-messages="fetchMessages($event.detail[0])"
+                @textarea-action-handler="voiceText($event.detail[0])"
+                @menu-action-handler="menuActionHandler($event.detail[0])"
               />
             </div>
           </template>
@@ -92,6 +99,37 @@ export default {
   name: 'chatControl',
   data () {
     return {
+      roomsActions: [
+        {name: 'inviteUser', title: '测试下拉' },
+        {name: 'removeUser', title: 'Remove User' },
+        {name: 'deleteRoom', title: 'Delete Room' }
+      ],
+      templatesText: [
+        {tag: '初始姿态', text: '设置为初始姿态'},
+        {tag: '关节一', text: '关节一旋转5度'},
+        {tag: '关节二', text: '关节二旋转6度'},
+        {tag: '关节三', text: '关节三旋转5度'},
+        {tag: '关节四', text: '关节四旋转6度'},
+        {tag: '关节五', text: '关节五旋转6度'},
+        {tag: '关节六', text: '关节六旋转4度'},
+        {tag: '抓取罐子', text: '抓取罐子然后放到粉色框中'},
+        {tag: '抓取盒子', text: '抓取盒子然后放到蓝色框中'},
+        {tag: '抓取瓶子', text: '抓取瓶子然后放到绿色框中'}
+      ],
+      textMessages: {
+        ROOMS_EMPTY: '无聊天',
+        ROOM_EMPTY: '未选中聊天',
+        NEW_MESSAGES: '新消息',
+        MESSAGE_DELETED: '消息已删除',
+        MESSAGES_EMPTY: '无消息',
+        CONVERSATION_STARTED: '聊天开始于:',
+        TYPE_MESSAGE: '请输入你的指令',
+        SEARCH: '搜索',
+        IS_ONLINE: '在线',
+        LAST_SEEN: 'last seen ',
+        IS_TYPING: '正在输入...',
+        CANCEL_SELECT_MESSAGE: '取消'
+      },
       itemList: [],
       layout: {
         layout: [
@@ -156,8 +194,8 @@ export default {
           roomName: 'Aubo_e5',
           avatar: robotIamge,
           users: [
-            { _id: '1', username: 'me' },
-            { _id: '2', username: 'AuboE5Robot' }
+            { _id: '2', username: 'me' },
+            { _id: '1', username: 'AuboE5Robot' }
           ]
         },
         {
@@ -171,7 +209,8 @@ export default {
         }
       ],
       messages: [],
-      messagesLoaded: false
+      messagesLoaded: false,
+      chatStyle:"{general: {color: '#0a0a0a',colorSpinner: '#333',borderStyle: '1px solid #e1e4e8'},footer: {background: '#f8f9fa',backgroundReply: 'rgba(0, 0, 0, 0.08)'},icons: {search: '#9ca6af'}"
     }
   },
   mounted () {
@@ -205,7 +244,7 @@ export default {
         const response = axios.post('/api/grasp/startItemGrasp', null, {
           params: {
             item: name,
-            place: "none"
+            place: 'none'
           }
         })
         // 处理后端返回的消息
@@ -341,6 +380,56 @@ export default {
           }
         ]
       }, 2000)
+    },
+    voiceText (text) {
+      //弹出提示：开始录音，请说话
+      this.$notify({
+        title: '提示',
+        message: '开始录音，请说话，停止说话后将自动识别文本！'
+      })
+      // 创建一个新的SpeechRecognition对象
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
+      const recognition = new SpeechRecognition()
+      // 设置中文语言
+      recognition.lang = 'zh-CN'
+      // 设置interimResults为false，这样在用户停止说话后立即返回结果
+      recognition.interimResults = false
+      // 开始语音识别
+      recognition.start()
+      // 当识别到语音结束时，将识别到的文本设置为message
+      recognition.onresult = (event) => {
+        const text = event.results[0][0].transcript
+        console.log('识别到的文本:', text)
+        // 将text文本填入到输入框中
+        this.messages = [
+          ...this.messages,
+          {
+            _id: this.messages.length + 1, // 确保ID是唯一的
+            content: text, // 回复的消息内容
+            senderId: '2', // 这里应该是机器人或者服务器的ID
+            timestamp: new Date().toString().substring(16, 21),
+            date: new Date().toDateString()
+          }
+        ]
+        this.$notify({
+          title: '提示',
+          message: '识别完成！'
+        })
+      }
+      // 如果发生错误，打印错误信息
+      recognition.onerror = (event) => {
+        console.error('语音识别错误:', event.error)
+      }
+    },
+    menuActionHandler({action, roomId }) {
+      switch (action.name) {
+        case 'inviteUser':
+          return this.inviteUser(roomId)
+        case 'removeUser':
+          return this.removeUser(roomId)
+        case 'deleteRoom':
+          return this.deleteRoom(roomId)
+      }
     }
   }
 }

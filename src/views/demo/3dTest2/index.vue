@@ -3,7 +3,7 @@
     <div class="common-layout">
       <el-container>
         <div id="webgl">
-          <Menu @sliderInput="sliderInput" />
+<!--          <Menu @sliderInput="sliderInput" />-->
         </div>
       </el-container>
     </div>

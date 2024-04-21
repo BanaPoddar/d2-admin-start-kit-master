@@ -63,6 +63,15 @@ const frameIn = [
         component: _import('demo/3dTest')
       },
       {
+        path: '3dTest2',
+        name: '3dTest2',
+        meta: {
+          title: '3D模型测试',
+          auth: true
+        },
+        component: _import('demo/3dTest2')
+      },
+      {
         path: 'page1',
         name: 'page1',
         meta: {

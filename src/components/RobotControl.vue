@@ -1,65 +1,46 @@
 <template>
-  <el-scrollbar height="100%">
-    <div class="slider-block">
-      <div class="slider-item">
-        <p class="demonstration">关节1</p>
-        <span class="demonstration">绕y轴旋转</span>
-        <el-slider v-model="joint1" show-input :min="min" :max="max" :step="0.01" @input="sliderInput($event, '1', 'y')" />
-      </div>
-      <div class="slider-item">
-        <p class="demonstration">关节2</p>
-        <span class="demonstration">绕x轴旋转</span>
-        <el-slider v-model="joint2" show-input :min="min" :max="max" :step="0.01" @input="sliderInput($event, '2', 'x')" />
-      </div>
-      <div class="slider-item">
-        <p class="demonstration">关节3</p>
-        <span class="demonstration">绕x轴旋转</span>
-        <el-slider v-model="joint3" show-input :min="min" :max="max" :step="0.01" @input="sliderInput($event, '3', 'x')" />
-      </div>
-
-      <div class="slider-item">
-        <p class="demonstration">关节4</p>
-        <span class="demonstration">绕x轴旋转</span>
-        <el-slider v-model="joint4" show-input :min="min" :max="max" :step="0.01" @input="sliderInput($event, '4', 'x')" />
-      </div>
-      <div class="slider-item">
-        <p class="demonstration">关节5</p>
-        <span class="demonstration">绕y轴旋转</span>
-        <el-slider v-model="joint5" show-input :min="min" :max="max" :step="0.01" @input="sliderInput($event, '5', 'y')" />
-      </div>
-
-      <div class="slider-item">
-        <p class="demonstration">关节6</p>
-        <span class="demonstration">绕x轴旋转</span>
-        <el-slider v-model="joint6" show-input :min="min" :max="max" :step="0.01" @input="sliderInput($event, '6', 'x')" />
-      </div>
+  <div class="slider-block">
+    <div v-for="joint in joints" :key="joint.name" class="slider-item">
+      <p class="demonstration">{{ joint.name }}</p>
+<!--      <span class="demonstration">{{ joint.description }}</span>-->
+      <el-slider v-model.number="joint.value" show-input :min="min" :max="max" :step="0.01" @input="sliderInput($event,joint.name,joint.direction)" />
     </div>
-  </el-scrollbar>
+  </div>
 </template>
 
-<script setup>
-import { ref, defineEmits } from 'vue'
-// eslint-disable-next-line no-unused-vars
-const joint1 = ref(0)
-// eslint-disable-next-line no-unused-vars
-const joint2 = ref(0)
-// eslint-disable-next-line no-unused-vars
-const joint3 = ref(0)
-// eslint-disable-next-line no-unused-vars
-const joint4 = ref(0)
-// eslint-disable-next-line no-unused-vars
-const joint5 = ref(0)
-// eslint-disable-next-line no-unused-vars
-const joint6 = ref(0)
-// eslint-disable-next-line no-unused-vars
-const min = ref(Number(-Math.PI.toFixed(2)))
-// eslint-disable-next-line no-unused-vars
-const max = ref(Number(Math.PI.toFixed(2)))
+<script>
 
-const emit = defineEmits(['sliderInput'])
-
-// eslint-disable-next-line no-unused-vars
-const sliderInput = (e, name, direction) => {
-  emit('sliderInput', e, name, direction)
+export default {
+  data () {
+    return {
+      joints: [
+        { name: 'link1_joint', description: '绕y轴旋转', value: -1.57, direction: 'y' },
+        { name: 'link2_joint', description: '绕x轴旋转', value: -1.57, direction: 'x' },
+        { name: 'link3_joint', description: '绕x轴旋转', value: 1.57, direction: 'x' },
+        { name: 'link4_joint', description: '绕x轴旋转', value: 0, direction: 'x' },
+        { name: 'link5_joint', description: '绕y轴旋转', value: 0, direction: 'y' },
+        { name: 'link6_joint', description: '绕x轴旋转', value: 0, direction: 'x' }
+      ],
+      min: Number(-Math.PI.toFixed(2)),
+      max: Number(Math.PI.toFixed(2))
+    }
+  },
+  methods: {
+    sliderInput (e, name, direction) {
+      this.$emit('sliderInput', e, name, direction)
+    }
+  }
 }
 </script>
+
+<style>
+.slider-block {
+  padding: 50px;
+  box-sizing: border-box;
+  width: 400px;
+  position: fixed;
+  top: 0;
+  left: 0;
+  background-color: transparent;
+}
+</style>

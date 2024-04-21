@@ -25,6 +25,7 @@ export const menuHeader = supplementPath([
     icon: 'folder-o',
     children: [
       { path: '/3d', title: '3d模型' },
+      { path: '/3dTest2', title: '3d模型测试' },
       { path: '/page1', title: '页面 1' },
       { path: '/page2', title: '页面 2' },
       { path: '/page3', title: '页面 3' }
@@ -42,6 +43,7 @@ export const menuAside = supplementPath([
     icon: 'folder-o',
     children: [
       { path: '/3d', title: '3d模型' },
+      { path: '/3dTest2', title: '3d模型测试' },
       { path: '/page1', title: '页面 1' },
       { path: '/page2', title: '页面 2' },
       { path: '/page3', title: '页面 3' }
