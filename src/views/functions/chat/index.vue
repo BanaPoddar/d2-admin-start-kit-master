@@ -35,7 +35,7 @@
                     <p><strong>置信度:</strong> {{ item.confidence }}</p>
                     <p><strong>位置:</strong> {{ item.position }}</p>
                   </div>
-                  <el-button type="primary" @click="graspItem(item.id)" style="margin-left: 20px">抓取</el-button>
+                  <el-button type="primary" @click="graspItem(item.class)" style="margin-left: 20px">抓取</el-button>
                 </div>
               </el-card>
             </div>
@@ -200,8 +200,20 @@ export default {
           console.error(error)
         })
     },
-    graspItem (itemId) {
-      // 处理抓取物品的逻辑
+    graspItem (name) {
+      try {
+        const response = axios.post('/api/grasp/startItemGrasp', null, {
+          params: {
+            item: name,
+            place: "none"
+          }
+        })
+        // 处理后端返回的消息
+        const msg = response.data.msg
+        console.log('后端返回消息:', msg)
+      } catch (error) {
+        console.error('抓取物品失败:', error)
+      }
     },
     log (arg1 = 'log', ...logs) {
       if (logs.length === 0) {

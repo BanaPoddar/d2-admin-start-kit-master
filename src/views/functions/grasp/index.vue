@@ -17,6 +17,11 @@
           <template v-if="item.i === '1'">
             <!--标签“使得{{item.i}}的值+1”-->
             <el-tag size="mini" type="info" slot="header">{{ Number(item.i) + 1 }}.日志区</el-tag>
+            <div class="log-container" style=" border: 1px solid #ccc; padding: 10px; height: 300px; overflow-y: auto;">
+              <div v-for="log in logs" :key="log.id" style="margin-bottom: 10px;">
+                时间戳: {{ log.timestamp }}, 操作: {{ log.action }}, 物品: {{ log.item }}, 颜色: {{ log.color }}, 状态: {{ log.status }}
+              </div>
+            </div>
           </template>
           <template v-if="item.i === '2'" style ="display: flex;flex-direction: column;overflow-y: auto;height: 100%;">
             <el-tag size="mini" type="info" slot="header">{{ Number(item.i) + 1 }}.待抓取物品列表 </el-tag>
@@ -30,7 +35,7 @@
                     <p><strong>置信度:</strong> {{ item.confidence }}</p>
                     <p><strong>位置:</strong> {{ item.position }}</p>
                   </div>
-                  <el-button type="primary" @click="graspItem(item.id)" style="margin-left:300px;">抓取</el-button>
+                  <el-button type="primary" @click="graspItem(item.class)" style="margin-left:300px;">抓取</el-button>
                 </div>
               </el-card>
             </div>
@@ -38,8 +43,8 @@
           <template v-if="item.i === '3'">
             <el-tag size="mini" type="info" slot="header"> {{ Number(item.i) + 1 }}.功能区</el-tag>
             <div style="display: flex; align-items: center; margin-left: 30px">
-              <el-switch v-model="item.shouldPlaceAfterGrasp" active-text="需要抓取后放置" style="margin-right: 20px;"></el-switch>
-              <el-radio-group v-if="item.shouldPlaceAfterGrasp" v-model="item.defaultChose">
+              <el-switch v-model="shouldPlaceAfterGrasp" active-text="需要抓取后放置" style="margin-right: 20px;"></el-switch>
+              <el-radio-group v-if="shouldPlaceAfterGrasp" v-model="defaultChose">
                 <el-radio label="blue" style="margin-right: 10px;">放到蓝色框</el-radio>
                 <el-radio label="pink" style="margin-right: 10px;">放到粉色框</el-radio>
                 <el-radio label="green">放到绿色框</el-radio>
@@ -93,8 +98,8 @@ export default {
       itemList: [],
       layout: {
         layout: [
-          { x: 0, y: 0, w: 5, h: 12, i: '0' },
-          { x: 0, y: 12, w: 5, h: 8, i: '1' },
+          { x: 0, y: 0, w: 5, h: 10, i: '0' },
+          { x: 0, y: 12, w: 5, h: 10, i: '1' },
           { x: 5, y: 0, w: 7, h: 16, i: '2' },
           { x: 5, y: 17, w: 7, h: 4, i: '3' }
         ],
@@ -107,7 +112,10 @@ export default {
         margin: [10, 10],
         useCssTransforms: true
       },
-      videoFeedUrl: 'api/camera/depth'
+      videoFeedUrl: 'api/camera/depth',
+      logs: [],
+      shouldPlaceAfterGrasp: false, // 默认值为 false，表示不需要在抓取后放置
+      defaultChose: 'blue' // 默认值为空字符串，表示没有默认的放置位置
     }
   },
   mounted () {
@@ -115,7 +123,33 @@ export default {
     this.showInfo()
     this.fetchItems()
   },
+  created () {
+    this.fetchLog()
+    // setInterval(this.fetchLog, 1000)
+  },
   methods: {
+    fetchLog () {
+      // 使用axios或其他方法从后台获取数据
+      axios.get('/api/grasp/log') // 更新 API 地址
+        .then(response => {
+          const data = response.data
+          // 对时间戳进行转换
+          const logs = data.map(entry => ({
+            timestamp: new Date(entry.timestamp).toLocaleString(), // 将时间戳转换为本地时间格式
+            action: entry.action,
+            item: entry.item,
+            color: entry.color,
+            status: entry.status
+          }))
+          this.logs = logs
+          console.log('Logs:', logs)
+          // 手动强制触发界面更新
+          this.$forceUpdate()
+        })
+        .catch(error => {
+          console.error('Error fetching data:', error)
+        })
+    },
     fetchItems () {
       axios.get('/api/grasp/getRecognizedItems')
         .then(response => {
@@ -136,8 +170,25 @@ export default {
           console.error(error)
         })
     },
-    graspItem (itemId) {
-      // 处理抓取物品的逻辑
+    graspItem (name) {
+      let place = 'none'
+      if (this.shouldPlaceAfterGrasp) {
+        place = this.defaultChose
+      }
+      try {
+        console.log('抓取物品:', name, '放置位置:', place)
+        const response = axios.post('/api/grasp/startItemGrasp', null, {
+          params: {
+            item: name,
+            place: place
+          }
+        })
+        // 处理后端返回的消息
+        const msg = response.data.msg
+        console.log('后端返回消息:', msg)
+      } catch (error) {
+        console.error('抓取物品失败:', error)
+      }
     },
     log (arg1 = 'log', ...logs) {
       if (logs.length === 0) {
@@ -154,7 +205,7 @@ export default {
     showInfo () {
       this.$notify({
         title: '提示',
-        message: '欢迎使用语音助手!每个卡片可以随意拖动！'
+        message: '欢迎进入抓取界面!右下角功能区可以选择是否抓完后放到框中！'
       })
     },
     sendMessage (text) {

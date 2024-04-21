@@ -1,31 +1,26 @@
 <template>
   <d2-container type="full" class="page">
     <d2-grid-layout
-      v-bind="layout"
-      @layout-updated="layoutUpdatedHandler">
+      v-bind="layout">
       <d2-grid-item
         v-for="(item, index) in layout.layout"
         :key="index"
-        v-bind="item"
-        @resize="resizeHandler"
-        @move="moveHandler"
-        @resized="resizedHandler"
-        @moved="movedHandler">
+        v-bind="item">
         <el-card shadow="never" class="page_card">
           <template v-if="item.i === '0'">
             <div class="center-bold">机械臂位置(m)</div>
             <div class="data-display-container">
-              <home-robot-data value="0" label="X" style="width: 33%" />
-              <home-robot-data value="0" label="Y" style="width: 33%"/>
-              <home-robot-data value="0" label="Z" style="width: 33%"/>
+              <home-robot-data :value="armPosition.x" label="X" style="width: 33%" />
+              <home-robot-data :value="armPosition.y" label="Y" style="width: 33%"/>
+              <home-robot-data :value="armPosition.z" label="Z" style="width: 33%"/>
             </div>
           </template>
           <template v-if="item.i === '1'">
             <div class="center-bold">机械臂姿态(deg)</div>
             <div class="data-display-container">
-              <home-robot-data value="0" label="DX" style="width: 33%" />
-              <home-robot-data value="0" label="DY" style="width: 33%"/>
-              <home-robot-data value="0" label="DZ" style="width: 33%"/>
+              <home-robot-data :value="armPose.rx" label="RX" style="width: 33%" />
+              <home-robot-data :value="armPose.ry" label="RY" style="width: 33%"/>
+              <home-robot-data :value="armPose.rz" label="RZ" style="width: 33%"/>
             </div>
           </template>
           <template v-if="item.i === '2'">
@@ -65,17 +60,75 @@
             </div>
           </template>
           <template v-if="item.i === '4'">
-            <div class="box-content">
-              <!-- 关节4-6数据 -->
-              <div>关节4 数据</div>
-              <div>关节5 数据</div>
-              <div>关节6 数据</div>
-            </div>
           </template>
           <template v-if="item.i === '5'">
             <div class="box-content">
               <!-- Echart 图表展示 -->
-              <div>Echart 图表</div>
+              <div class="statistics-layout" id="robot-usage">
+                <el-row>
+                  <el-col :span="4">
+                    <div style="padding: 20px">
+                      <div>
+                        <div style="color: #909399;font-size: 14px">本月启动总数</div>
+                        <div style="color: #606266;font-size: 24px;padding: 10px 0">129</div>
+                        <div>
+                          <span class="color-success" style="font-size: 14px">+13%</span>
+                          <span style="color: #C0C4CC;font-size: 14px">同比上月</span>
+                        </div>
+                      </div>
+                      <div style="margin-top: 20px;">
+                        <div style="color: #909399;font-size: 14px">本周启动总数</div>
+                        <div style="color: #606266;font-size: 24px;padding: 10px 0">27</div>
+                        <div>
+                          <span class="color-danger" style="font-size: 14px">-19%</span>
+                          <span style="color: #C0C4CC;font-size: 14px">同比上周</span>
+                        </div>
+                      </div>
+                      <div style="margin-top: 20px;">
+                        <div style="color: #909399;font-size: 14px">本月总耗电</div>
+                        <div style="color: #606266;font-size: 24px;padding: 10px 0">300.4</div>
+                        <div>
+                          <span class="color-success" style="font-size: 14px">+10%</span>
+                          <span style="color: #C0C4CC;font-size: 14px">同比上月</span>
+                        </div>
+                      </div>
+                      <div style="margin-top: 20px;">
+                        <div style="color: #909399;font-size: 14px">本周总耗电</div>
+                        <div style="color: #606266;font-size: 24px;padding: 10px 0">121.3</div>
+                        <div>
+                          <span class="color-danger" style="font-size: 14px">-10%</span>
+                          <span style="color: #C0C4CC;font-size: 14px">同比上周</span>
+                        </div>
+                      </div>
+                    </div>
+                  </el-col>
+                  <el-col :span="20">
+                    <div style="padding: 10px;border-left:1px solid #DCDFE6">
+                      <el-date-picker
+                        style="float: right;z-index: 1"
+                        size="small"
+                        v-model="orderCountDate"
+                        type="daterange"
+                        align="right"
+                        unlink-panels
+                        range-separator="至"
+                        start-placeholder="开始日期"
+                        end-placeholder="结束日期"
+                        @change="handleDateChange"
+                        :picker-options="pickerOptions">
+                      </el-date-picker>
+                      <div>
+                        <ve-line
+                          :data="chartData"
+                          :legend-visible="false"
+                          :loading="loading"
+                          :data-empty="dataEmpty"
+                          :settings="chartSettings"></ve-line>
+                      </div>
+                    </div>
+                  </el-col>
+                </el-row>
+              </div>
             </div>
           </template>
         </el-card>
@@ -88,8 +141,30 @@
 import Vue from 'vue'
 import { GridLayout, GridItem } from 'vue-grid-layout'
 import HomeRobotData from '@/components/HomeRobotData.vue'
+import { str2Date } from '@/libs/data'
+import axios from 'axios'
 Vue.component('d2-grid-layout', GridLayout)
 Vue.component('d2-grid-item', GridItem)
+const DATA_FROM_BACKEND = {
+  columns: ['date', 'orderCount', 'orderAmount'],
+  rows: [
+    { date: '2024-03-01', orderCount: 1, orderAmount: 10.93 },
+    { date: '2024-03-02', orderCount: 2, orderAmount: 22.30 },
+    { date: '2024-03-03', orderCount: 3, orderAmount: 36.23 },
+    { date: '2024-03-04', orderCount: 7, orderAmount: 64.23 },
+    { date: '2024-03-05', orderCount: 4, orderAmount: 84.92 },
+    { date: '2024-03-06', orderCount: 3, orderAmount: 62.93 },
+    { date: '2024-03-07', orderCount: 9, orderAmount: 22.93 },
+    { date: '2024-03-08', orderCount: 2, orderAmount: 62.93 },
+    { date: '2024-03-09', orderCount: 3, orderAmount: 52.93 },
+    { date: '2024-03-10', orderCount: 4, orderAmount: 32.93 },
+    { date: '2024-03-11', orderCount: 8, orderAmount: 22.93 },
+    { date: '2024-03-12', orderCount: 3, orderAmount: 82.92 },
+    { date: '2024-03-13', orderCount: 4, orderAmount: 10.23 },
+    { date: '2024-03-14', orderCount: 9, orderAmount: 12.93 },
+    { date: '2024-03-15', orderCount: 3, orderAmount: 42.93 }
+  ]
+}
 export default {
   name: 'PageDemoPage1',
   components: {
@@ -105,7 +180,7 @@ export default {
           { x: 0, y: 4, w: 3, h: 15, i: '2', isDraggable: false },
           { x: 3, y: 4, w: 6, h: 15, i: '3' },
           { x: 9, y: 4, w: 3, h: 15, i: '4' },
-          { x: 0, y: 16, w: 12, h: 9, i: '5' }
+          { x: 0, y: 16, w: 12, h: 14, i: '5' }
         ],
         colNum: 12,
         rowHeight: 30,
@@ -125,6 +200,87 @@ export default {
         dx: 0.123123,
         dy: 0.123123,
         dz: 0.123123
+      },
+      pickerOptions: {
+        shortcuts: [{
+          text: '最近一周',
+          onClick (picker) {
+            const start = new Date(2024, 3, 1)
+            const end = new Date(start.getTime() + 1000 * 60 * 60 * 24 * 7)
+            picker.$emit('pick', [start, end])
+          }
+        }, {
+          text: '最近一月',
+          onClick (picker) {
+            const start = new Date(2024, 3, 15)
+            const end = new Date(start.getTime() + 1000 * 60 * 60 * 24 * 30)
+            picker.$emit('pick', [start, end])
+          }
+        }]
+      },
+      orderCountDate: '',
+      chartSettings: {
+        xAxisType: 'time',
+        area: true,
+        axisSite: { right: ['orderAmount'] },
+        labelMap: { orderCount: '启动次数', orderAmount: '耗电量' }
+      },
+      chartData: {
+        columns: [],
+        rows: []
+      },
+      loading: false,
+      dataEmpty: false,
+      armPosition: {
+        x: 0,
+        y: 0,
+        z: 0
+      },
+      armPose: {
+        rx: 0,
+        ry: 0,
+        rz: 0
+      },
+      joint1: 0,
+      joint2: 0,
+      joint3: 0,
+      joint4: 0,
+      joint5: 0,
+      joint6: 0,
+      min: -180,
+      max: 180
+    }
+  },
+  watch: {
+    // 监听所有关节角度的变化
+    joint1 (newValue, oldValue) {
+      if (newValue !== oldValue) {
+        this.sendCommandToBackend('joint1', newValue)
+      }
+    },
+    joint2 (newValue, oldValue) {
+      if (newValue !== oldValue) {
+        this.sendCommandToBackend('joint2', newValue)
+      }
+    },
+    joint3 (newValue, oldValue) {
+      if (newValue !== oldValue) {
+        this.sendCommandToBackend('joint3', newValue)
+      }
+    },
+    joint4 (newValue, oldValue) {
+      if (newValue !== oldValue) {
+        this.sendCommandToBackend('joint4', newValue)
+      }
+    },
+    joint5 (newValue, oldValue) {
+      if (newValue !== oldValue) {
+        this.sendCommandToBackend('joint5', newValue)
+      }
+    },
+    joint6 (newValue, oldValue) {
+      if (newValue !== oldValue) {
+        this.sendCommandToBackend('joint6', newValue)
       }
     }
   },
@@ -132,7 +288,43 @@ export default {
     // 加载完成后显示提示
     this.showInfo()
   },
+  created () {
+    this.initOrderCountDate()
+    this.getData()
+    this.getCurrentPose()
+    this.getCurrentAngle()
+    setInterval(() => {
+      this.getCurrentPose()
+    }, 1500) // 每隔0.5秒更新一次数据
+  },
   methods: {
+    handleDateChange () {
+      this.getData()
+    },
+    initOrderCountDate () {
+      const start = new Date(2024, 2, 1)
+      const end = new Date(start.getTime() + 1000 * 60 * 60 * 24 * 7)
+      this.orderCountDate = [start, end]
+    },
+    getData () {
+      setTimeout(() => {
+        this.chartData = {
+          columns: ['date', 'orderCount', 'orderAmount'],
+          rows: []
+        }
+        for (let i = 0; i < DATA_FROM_BACKEND.rows.length; i++) {
+          const item = DATA_FROM_BACKEND.rows[i]
+          const currDate = str2Date(item.date)
+          const start = this.orderCountDate[0]
+          const end = this.orderCountDate[1]
+          if (currDate.getTime() >= start.getTime() && currDate.getTime() <= end.getTime()) {
+            this.chartData.rows.push(item)
+          }
+        }
+        this.dataEmpty = false
+        this.loading = false
+      }, 1000)
+    },
     log (arg1 = 'log', ...logs) {
       if (logs.length === 0) {
         console.log(arg1)
@@ -148,28 +340,48 @@ export default {
     showInfo () {
       this.$notify({
         title: '提示',
-        message: '你可以按住卡片拖拽改变位置；或者在每个卡片的右下角拖动，调整卡片大小'
+        message: '欢迎进入机械臂数据大屏！'
       })
     },
-    // 测试代码
-    layoutUpdatedHandler (newLayout) {
-      console.group('layoutUpdatedHandler')
-      newLayout.forEach(e => {
-        console.log(`{'x': ${e.x}, 'y': ${e.y}, 'w': ${e.w}, 'h': ${e.h}, 'i': '${e.i}'},`)
+    getCurrentPose () {
+      axios.get('/api/get_current_pose').then(response => {
+        this.armPose = response.data.current_pose.deg
+        this.armPose.rx = this.armPose.rx.toFixed(5)
+        this.armPose.ry = this.armPose.ry.toFixed(5)
+        this.armPose.rz = this.armPose.rz.toFixed(5)
+        this.armPosition = response.data.current_pose.position
+        this.armPosition.x = this.armPosition.x.toFixed(5)
+        this.armPosition.y = this.armPosition.y.toFixed(5)
+        this.armPosition.z = this.armPosition.z.toFixed(5)
+      }).catch(error => {
+        console.error('Error fetching gripper data:', error)
       })
-      console.groupEnd()
     },
-    resizeHandler (i, newH, newW) {
-      this.log('resizeHandler', `i: ${i}, newH: ${newH}, newW: ${newW}`)
+    getCurrentAngle () {
+      // 使用 axios发送请求到 http://127.0.0.1:5000/get_current_angle
+      axios.get('/api/get_current_angle').then(response => {
+        console.log(response.data)
+        this.joint1 = response.data.current_position[0]
+        this.joint2 = response.data.current_position[1]
+        this.joint3 = response.data.current_position[2]
+        this.joint4 = response.data.current_position[3]
+        this.joint5 = response.data.current_position[4]
+        this.joint6 = response.data.current_position[5]
+      }).catch(error => {
+        console.error('Error fetching gripper data:', error)
+      })
     },
-    moveHandler (i, newX, newY) {
-      this.log('moveHandler', `i: ${i}, newX: ${newX}, newY: ${newY}`)
-    },
-    resizedHandler (i, newH, newW, newHPx, newWPx) {
-      this.log('resizedHandler', `i: ${i}, newH: ${newH}, newW: ${newW}, newHPx: ${newHPx}, newWPx: ${newWPx}`)
-    },
-    movedHandler (i, newX, newY) {
-      this.log('movedHandler', `i: ${i}, newX: ${newX}, newY: ${newY}`)
+    sendCommandToBackend (joint, angle) {
+      // 向后台发送执行指令的逻辑
+      // 可以使用axios或其他方式发送请求到后台
+      console.log(`发送指令给后台：关节${joint} 角度${angle}`)
+      axios.post('/api/change_joint_angle', {
+        joint_values: [this.joint1, this.joint2, this.joint3, this.joint4, this.joint5, this.joint6]
+      }).then(response => {
+        console.log('后台响应：', response.data)
+      }).catch(error => {
+        console.error('请求失败：', error)
+      })
     }
   }
 }
@@ -186,7 +398,7 @@ export default {
       @extend %unable-select;
       display: flex;
       flex-direction: column;
-      overflow-y: auto; /* 启用垂直方向上的滚动条 */
+      /*overflow-y: auto; !* 启用垂直方向上的滚动条 *!*/
       .data-display-container {
         display: flex;
       }
@@ -236,5 +448,10 @@ export default {
 .input-area textarea {
   flex-grow: 1;
   margin-right: 10px;
+}
+
+.statistics-layout {
+  margin-top: 20px;
+  border: 1px solid #DCDFE6;
 }
 </style>
