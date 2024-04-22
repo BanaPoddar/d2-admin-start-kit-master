@@ -2,16 +2,21 @@
   <div class="slider-block">
     <div v-for="joint in joints" :key="joint.name" class="slider-item">
       <p class="demonstration">{{ joint.description }}</p>
-<!--      <span class="demonstration">{{ joint.description }}</span>-->
       <el-slider v-model.number="joint.value" show-input :min="min" :max="max" :step="0.01" @input="sliderInput($event,joint.name,joint.direction)" />
     </div>
   </div>
 </template>
 
 <script>
-import axios from "axios";
+import axios from 'axios'
 
 export default {
+  props: {
+    isAsync: {
+      type: Boolean,
+      default: true
+    }
+  },
   data () {
     return {
       joints: [
@@ -28,8 +33,12 @@ export default {
   },
   watch: {
     joints: {
-      handler() {
-          this.sendCommandToBackend();
+      handler (newVal) {
+        const jointValues = newVal.map(joint => joint.value * Math.PI / 180)
+        this.$emit('joints-changed', jointValues)
+        if (!this.isAsync) {
+          this.sendCommandToBackend()
+        }
       },
       deep: true
     }
@@ -40,16 +49,14 @@ export default {
       this.$emit('sliderInput', radianValue, name, direction)
     },
     sendCommandToBackend () {
-      // 向后台发送执行指令的逻辑
-      // 可以使用axios或其他方式发送请求到后台
-      const joint_values = this.joints.map(joint => joint.value);
+      const joint_values = this.joints.map(joint => joint.value)
       console.log('joint_values:', joint_values)
-      axios.post('/api/change_joint_angle', {joint_values})
+      axios.post('/api/change_joint_angle', { joint_values })
         .then(response => {
-        console.log('后台响应：', response.data)
-      }).catch(error => {
-        console.error('请求失败：', error)
-      })
+          console.log('后台响应：', response.data)
+        }).catch(error => {
+          console.error('请求失败：', error)
+        })
     }
   }
 }

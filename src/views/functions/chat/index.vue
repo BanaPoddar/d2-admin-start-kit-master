@@ -100,21 +100,21 @@ export default {
   data () {
     return {
       roomsActions: [
-        {name: 'inviteUser', title: '测试下拉' },
-        {name: 'removeUser', title: 'Remove User' },
-        {name: 'deleteRoom', title: 'Delete Room' }
+        { name: 'inviteUser', title: '测试下拉' },
+        { name: 'removeUser', title: 'Remove User' },
+        { name: 'deleteRoom', title: 'Delete Room' }
       ],
       templatesText: [
-        {tag: '初始姿态', text: '设置为初始姿态'},
-        {tag: '关节一', text: '关节一旋转5度'},
-        {tag: '关节二', text: '关节二旋转6度'},
-        {tag: '关节三', text: '关节三旋转5度'},
-        {tag: '关节四', text: '关节四旋转6度'},
-        {tag: '关节五', text: '关节五旋转6度'},
-        {tag: '关节六', text: '关节六旋转4度'},
-        {tag: '抓取罐子', text: '抓取罐子然后放到粉色框中'},
-        {tag: '抓取盒子', text: '抓取盒子然后放到蓝色框中'},
-        {tag: '抓取瓶子', text: '抓取瓶子然后放到绿色框中'}
+        { tag: '初始姿态', text: '设置为初始姿态' },
+        { tag: '关节一', text: '关节一旋转5度' },
+        { tag: '关节二', text: '关节二旋转6度' },
+        { tag: '关节三', text: '关节三旋转5度' },
+        { tag: '关节四', text: '关节四旋转6度' },
+        { tag: '关节五', text: '关节五旋转6度' },
+        { tag: '关节六', text: '关节六旋转4度' },
+        { tag: '抓取罐子', text: '抓取罐子然后放到粉色框中' },
+        { tag: '抓取盒子', text: '抓取盒子然后放到蓝色框中' },
+        { tag: '抓取瓶子', text: '抓取瓶子然后放到绿色框中' }
       ],
       textMessages: {
         ROOMS_EMPTY: '无聊天',
@@ -210,7 +210,7 @@ export default {
       ],
       messages: [],
       messagesLoaded: false,
-      chatStyle:"{general: {color: '#0a0a0a',colorSpinner: '#333',borderStyle: '1px solid #e1e4e8'},footer: {background: '#f8f9fa',backgroundReply: 'rgba(0, 0, 0, 0.08)'},icons: {search: '#9ca6af'}"
+      chatStyle: "{general: {color: '#0a0a0a',colorSpinner: '#333',borderStyle: '1px solid #e1e4e8'},footer: {background: '#f8f9fa',backgroundReply: 'rgba(0, 0, 0, 0.08)'},icons: {search: '#9ca6af'}"
     }
   },
   mounted () {
@@ -382,7 +382,7 @@ export default {
       }, 2000)
     },
     voiceText (text) {
-      //弹出提示：开始录音，请说话
+      // 弹出提示：开始录音，请说话
       this.$notify({
         title: '提示',
         message: '开始录音，请说话，停止说话后将自动识别文本！'
@@ -412,8 +412,9 @@ export default {
           }
         ]
         this.$notify({
-          title: '提示',
-          message: '识别完成！'
+          title: '成功',
+          message: '识别完成！',
+          type: 'success'
         })
       }
       // 如果发生错误，打印错误信息
@@ -421,7 +422,7 @@ export default {
         console.error('语音识别错误:', event.error)
       }
     },
-    menuActionHandler({action, roomId }) {
+    menuActionHandler ({ action, roomId }) {
       switch (action.name) {
         case 'inviteUser':
           return this.inviteUser(roomId)

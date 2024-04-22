@@ -2,15 +2,14 @@
   <d2-container type="card">
 
     <template slot="header">姿态同步</template>
-    <vue-tour v-if="showTour" :steps="steps" />
     <div style="height: 900px; margin: -16px;">
       <SplitPane :min-percent='20' :default-percent='36' split="vertical">
         <template slot="paneL">
           <SplitPane split="horizontal" :default-percent='50'>
             <template slot="paneL">
               <div style="margin: 10px;">
-                <!--摄像头画面不超过paneL范围-->
-                <img :src="videoFeedUrl" style="width: 100%; height: 100%;" />
+                <!--摄像头画面不超过paneL范围；使用:class绑定来动态改变摄像头画面的样式 -->
+                <img :src="videoFeedUrl" style="width: 100%; height: 100%;" :class="{ 'grayscale': !isCameraActive }" />
               </div>
             </template>
             <template slot="paneR">
@@ -124,6 +123,7 @@ export default {
   },
   data: function () {
     return {
+      isCameraActive: true,
       videoFeedUrl: '/api/camera/pose', // 后端Flask接口地址
       participants: [
         { i: '1' },
@@ -214,6 +214,15 @@ export default {
           } else {
             this.anglesData[4] = '同步中'
           }
+          if (this.anglesData[0] < 50 || this.anglesData[0] > 180 || this.anglesData[1] < 65 || this.anglesData[1] > 150) {
+            this.isCameraActive = false
+            this.$message({
+              message: '请站起来背起右臂，保证左臂在摄像头画面内',
+              type: 'warning'
+            })
+          } else {
+            this.isCameraActive = true
+          }
         })
         .catch(error => {
           console.error('Error fetching data:', error)
@@ -252,7 +261,8 @@ export default {
       axios.post('/api/sync/start_sync_pose')
         .then(response => {
           this.$message({
-            message: '开始同步',
+            message: '开始同步,请站起来背起右臂，保证左臂在摄像头画面内\n' +
+              '当大臂身体的夹角[60,150]内，肘关节夹角在[50,180]内时，机械臂开始同步',
             type: 'success'
           })
         })
@@ -276,3 +286,10 @@ export default {
   }
 }
 </script>
+
+<style scoped>
+/* 添加一个新的CSS类来应用灰度滤镜 */
+.grayscale {
+  filter: grayscale(100%);
+}
+</style>

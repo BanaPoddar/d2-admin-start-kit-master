@@ -23,70 +23,46 @@
               <home-robot-data :value="armPose.rz" label="RZ" style="width: 33%"/>
             </div>
           </template>
-          <template v-if="item.i === '3'">
-<!--            <div class="box-content">
-              <div class="slider-block">
-                <div class="slider-item">
-                  <p class="demonstration">关节1</p>
-                  <el-slider v-model="joint1" show-input :min="min" :max="max" :step="0.01" @input="sliderInput($event, '1', 'y')" />
-                </div>
-                <div class="slider-item">
-                  <p class="demonstration">关节2</p>
-                  <el-slider v-model="joint2" show-input :min="min" :max="max" :step="0.01" @input="sliderInput($event, '2', 'x')" />
-                </div>
-                <div class="slider-item">
-                  <p class="demonstration">关节3</p>
-                  <el-slider v-model="joint3" show-input :min="min" :max="max" :step="0.01" @input="sliderInput($event, '3', 'x')" />
-                </div>
-
-                <div class="slider-item">
-                  <p class="demonstration">关节4</p>
-                  <el-slider v-model="joint4" show-input :min="min" :max="max" :step="0.01" @input="sliderInput($event, '4', 'x')" />
-                </div>
-                <div class="slider-item">
-                  <p class="demonstration">关节5</p>
-                  <el-slider v-model="joint5" show-input :min="min" :max="max" :step="0.01" @input="sliderInput($event, '5', 'y')" />
-                </div>
-                <div class="slider-item">
-                  <p class="demonstration">关节6</p>
-                  <el-slider v-model="joint6" show-input :min="min" :max="max" :step="0.01" @input="sliderInput($event, '6', 'x')" />
-                </div>
-              </div>
-            </div>-->
+          <template v-if="item.i === '2'">
             <div class="box-content">
-              <div class="center-bold">机械臂控制</div>
-              <div class="button-container">
-                <el-button type="primary">设置为初始姿态</el-button>
+              <!-- three.js 3D模型 -->
+              <robot-model ref="robotModel" :isAsync="isAsync" @joints-changed="updateJoints"/>
+            </div>
+          </template>
+          <template v-if="item.i === '3'">
+            <div class="box-content">
+              <div class="left-align">机械臂控制</div>
+              <div class="button-container" style="margin-bottom: 20px">
+                <el-button type="primary" @click="setHomePose">设置为初始姿态</el-button>
                 <el-button type="danger">急停</el-button>
                 <el-button type="success">启动</el-button>
               </div>
-              <div class="center-bold">夹爪设置</div>
-              <div class="input-container">
+              <hr>
+              <div class="left-align">异步发送关节数据(仿真模式)</div>
+              <div class="switch-container" style="margin-bottom: 20px">
+                <el-switch v-model="isAsync" active-text="开启" inactive-text="关闭" class="switch-spacing" @change="confirmModeChange"></el-switch>
+                <el-button type="primary" v-show="isAsync" @click="sendJointData" >发送关节数据</el-button>
+              </div>
+              <hr>
+              <div class="left-align">夹爪设置</div>
+              <div class="input-item">
+                <div class="status-container">
+                  <span>夹爪状态：</span>
+                  <el-tag :type="isConnected ? 'success' : 'danger'" class="tag-spacing">{{ isConnected ? '已连接' : '未连接' }}</el-tag>
+                  <el-button @click="toggleConnection" type="primary">{{ isConnected ? '断开' : '连接' }}</el-button>
+                </div>
                 <div class="input-item">
                   <span>夹爪宽度：</span>
-                  <el-input-number v-model="gripperWidth" :min="0" :max="100"></el-input-number>
+                  <el-input-number v-model="gripperWidth" :min="0" :max="255"></el-input-number>
                 </div>
                 <div class="input-item">
                   <span>夹爪速度：</span>
                   <el-input-number v-model="gripperSpeed" :min="0" :max="100"></el-input-number>
                 </div>
               </div>
-              <div class="center-bold">夹爪状态</div>
-              <div class="status-container">
-                <el-tag :type="isConnected ? 'success' : 'danger'">{{ isConnected ? '已连接' : '未连接' }}</el-tag>
-                <el-button @click="toggleConnection">{{ isConnected ? '断开' : '连接' }}</el-button>
-              </div>
-            </div>
-          </template>
-          <template v-if="item.i === '2'">
-            <div class="box-content">
-              <!-- three.js -->
-              <robot-model />
             </div>
           </template>
           <template v-if="item.i === '4'">
-          </template>
-          <template v-if="item.i === '5'">
             <div class="box-content">
               <!-- Echart 图表展示 -->
               <div class="statistics-layout" id="robot-usage">
@@ -204,8 +180,8 @@ export default {
         layout: [
           { x: 0, y: 0, w: 6, h: 4, i: '0' },
           { x: 6, y: 0, w: 6, h: 4, i: '1' },
-          { x: 0, y: 4, w: 8, h: 15, i: '2', isDraggable: false },
-          { x: 8, y: 4, w: 4, h: 15, i: '3' },
+          { x: 0, y: 4, w: 8, h: 16, i: '2', isDraggable: false },
+          { x: 8, y: 4, w: 4, h: 16, i: '3' },
           { x: 0, y: 16, w: 12, h: 14, i: '4' }
         ],
         colNum: 12,
@@ -269,7 +245,9 @@ export default {
       },
       gripperWidth: 0,
       gripperSpeed: 0,
-      isConnected: false
+      isConnected: false,
+      isAsync: true,
+      joints: [0, 0, 1.57, 0, 1.57, 0]
     }
   },
   mounted () {
@@ -286,6 +264,56 @@ export default {
     }, 1500) // 每隔0.5秒更新一次数据
   },
   methods: {
+    setHomePose () {
+      const joint_values = [0, 0, 1.57, 0, 1.57, 1]
+      // 发送给后端 真实运动
+      axios.post('/api/change_joint_angle', { joint_values })
+        .then(response => {
+          // 给出提示
+          this.$notify({
+            title: '成功',
+            message: '机械臂已经回到初始位置！',
+            type: 'success'
+          })
+          // 设置3d模型关节的值
+          // this.$refs.robotModel.handleSetModelJointValues(joint_values)
+        }).catch(error => {
+          console.error('请求失败：', error)
+        })
+    },
+    confirmModeChange (newVal) {
+      if (!newVal) {
+        this.$confirm('警告：真实模式机械臂可能发生剧烈抖动，您确定关闭仿真模式吗?', '提示', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        }).then(() => {
+          this.isAsync = newVal
+        }).catch(() => {
+          this.isAsync = !newVal
+        })
+      }
+    },
+    updateJoints (newJoints) {
+      // 更新home/index.vue组件的数据
+      this.joints = newJoints
+    },
+    sendJointData () {
+      // 在这里添加发送关节数据的逻辑
+      const joint_values = this.joints
+      console.log('joint_values:', joint_values)
+      axios.post('/api/change_joint_angle', { joint_values })
+        .then(response => {
+          console.log('后台响应：', response.data)
+          this.$notify({
+            title: '成功',
+            message: '成功发送关节角度数据！',
+            type: 'success'
+          })
+        }).catch(error => {
+          console.error('请求失败：', error)
+        })
+    },
     toggleConnection () {
       this.isConnected = !this.isConnected
     },
@@ -397,6 +425,43 @@ export default {
         /* 向右移动40px */
         margin-LEFT: 100px;
         font-size: 16px;
+      }
+      .box-content {
+        padding-left: 10px; /* 调整这个值来改变左边的空白区域的大小 */
+      }
+
+      .left-align {
+        text-align: left;
+        margin-bottom: 20px;
+        margin-top: 20px;
+        /* 加粗 字号变大 */
+        font-weight: bold;
+        font-size: 20px;
+      }
+
+      .switch-spacing {
+        margin-right: 20px; /* 调整这个值来改变间距的大小 */
+      }
+
+      .tag-spacing {
+        margin-right: 10px; /* 调整这个值来改变标签和按钮之间的间距 */
+      }
+
+      .button-container {
+        display: flex;
+        flex-direction: row;
+        justify-content: flex-start;
+        gap: 10px; /* 调整这个值来改变按钮之间的间隔 */
+      }
+
+      .status-container, .input-item {
+        margin-bottom: 20px; /* 调整这个值来改变行间距的大小 */
+      }
+
+      .input-container {
+        display: flex;
+        flex-direction: column;
+        gap: 10px; /* 调整这个值来改变输入框之间的间隔 */
       }
     }
     .vue-resizable-handle {
