@@ -17,9 +17,9 @@ function supplementPath (menu) {
 
 export const menuHeader = supplementPath([
   { path: '/index', title: '数据总览', icon: 'home' },
-  { path: '/grasp', title: '智能抓取', icon: 'home' },
-  { path: '/sync', title: '同步姿态', icon: 'home' },
-  { path: '/chat', title: '语音助手', icon: 'home' },
+  { path: '/grasp', title: '智能抓取', icon: 'hand-stop-o' },
+  { path: '/sync', title: '同步姿态', icon: 'camera' },
+  { path: '/chat', title: '语音助手', icon: 'microphone' },
   {
     title: '页面',
     icon: 'folder-o',
@@ -35,9 +35,9 @@ export const menuHeader = supplementPath([
 
 export const menuAside = supplementPath([
   { path: '/index', title: '数据总览', icon: 'home' },
-  { path: '/grasp', title: '智能抓取', icon: 'home' },
-  { path: '/sync', title: '同步姿态', icon: 'home' },
-  { path: '/chat', title: '语音助手', icon: 'home' },
+  { path: '/grasp', title: '智能抓取', icon: 'hand-stop-o' },
+  { path: '/sync', title: '同步姿态', icon: 'camera' },
+  { path: '/chat', title: '语音助手', icon: 'microphone' },
   {
     title: '页面',
     icon: 'folder-o',

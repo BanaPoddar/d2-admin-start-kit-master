@@ -1,7 +1,7 @@
 <template>
   <div class="slider-block">
     <div v-for="joint in joints" :key="joint.name" class="slider-item">
-      <p class="demonstration">{{ joint.name }}</p>
+      <p class="demonstration">{{ joint.description }}</p>
 <!--      <span class="demonstration">{{ joint.description }}</span>-->
       <el-slider v-model.number="joint.value" show-input :min="min" :max="max" :step="0.01" @input="sliderInput($event,joint.name,joint.direction)" />
     </div>
@@ -9,25 +9,47 @@
 </template>
 
 <script>
+import axios from "axios";
 
 export default {
   data () {
     return {
       joints: [
-        { name: 'link1_joint', description: '绕y轴旋转', value: -1.57, direction: 'y' },
-        { name: 'link2_joint', description: '绕x轴旋转', value: -1.57, direction: 'x' },
-        { name: 'link3_joint', description: '绕x轴旋转', value: 1.57, direction: 'x' },
-        { name: 'link4_joint', description: '绕x轴旋转', value: 0, direction: 'x' },
-        { name: 'link5_joint', description: '绕y轴旋转', value: 0, direction: 'y' },
-        { name: 'link6_joint', description: '绕x轴旋转', value: 0, direction: 'x' }
+        { name: 'shoulder_joint', description: '关节一', value: 0, direction: 'y' },
+        { name: 'upperArm_joint', description: '关节二', value: 0, direction: 'x' },
+        { name: 'foreArm_joint', description: '关节三', value: 90, direction: 'x' },
+        { name: 'wrist1_joint', description: '关节四', value: 0, direction: 'x' },
+        { name: 'wrist2_joint', description: '关节五', value: 90, direction: 'y' },
+        { name: 'wrist3_joint', description: '关节六', value: 0, direction: 'x' }
       ],
-      min: Number(-Math.PI.toFixed(2)),
-      max: Number(Math.PI.toFixed(2))
+      min: Number(-180),
+      max: Number(180)
+    }
+  },
+  watch: {
+    joints: {
+      handler() {
+          this.sendCommandToBackend();
+      },
+      deep: true
     }
   },
   methods: {
     sliderInput (e, name, direction) {
-      this.$emit('sliderInput', e, name, direction)
+      const radianValue = e * Math.PI / 180
+      this.$emit('sliderInput', radianValue, name, direction)
+    },
+    sendCommandToBackend () {
+      // 向后台发送执行指令的逻辑
+      // 可以使用axios或其他方式发送请求到后台
+      const joint_values = this.joints.map(joint => joint.value);
+      console.log('joint_values:', joint_values)
+      axios.post('/api/change_joint_angle', {joint_values})
+        .then(response => {
+        console.log('后台响应：', response.data)
+      }).catch(error => {
+        console.error('请求失败：', error)
+      })
     }
   }
 }

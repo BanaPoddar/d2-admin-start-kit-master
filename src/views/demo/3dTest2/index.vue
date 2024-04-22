@@ -3,7 +3,7 @@
     <div class="common-layout">
       <el-container>
         <div id="webgl">
-<!--          <Menu @sliderInput="sliderInput" />-->
+            <Menu @sliderInput="sliderInput" />
         </div>
       </el-container>
     </div>
@@ -13,12 +13,12 @@
 <script>
 import Menu from '@/components/RobotControl'
 import * as THREE from 'three'
-import { OrbitControls } from '@three-ts/orbit-controls';
-import URDFLoader from 'urdf-loader';
+import { OrbitControls } from '@three-ts/orbit-controls'
+import URDFLoader from 'urdf-loader'
 
 export default {
   components: {
-    Menu,
+    Menu
   },
   data() {
     return {
@@ -96,7 +96,8 @@ export default {
     initRobot() {
       // 加载模型
       const loader = new URDFLoader();
-      loader.load('./ur5/ur5.urdf', result => {
+      /*loader.load('./ur5/ur5.urdf', result => {*/
+      loader.load('./aubo_description/urdf/aubo_i5.urdf', result => {
         this.robot = result;
         this.robot.rotation.x = Math.PI / 2;
         this.robot.rotation.x *= -1;
@@ -104,6 +105,13 @@ export default {
         this.robot.position.y = 0;
         this.robot.position.z = 0;
         this.scene.add(this.robot)
+        // 设置关节初始角度
+        this.robot.joints.shoulder_joint.setJointValue(0)
+        this.robot.joints.upperArm_joint.setJointValue(0)
+        this.robot.joints.foreArm_joint.setJointValue(1.57)
+        this.robot.joints.wrist1_joint.setJointValue(0)
+        this.robot.joints.wrist2_joint.setJointValue(1.57)
+        this.robot.joints.wrist3_joint.setJointValue(0)
       })
     }
   }

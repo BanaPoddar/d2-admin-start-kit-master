@@ -24,7 +24,7 @@
             </div>
           </template>
           <template v-if="item.i === '3'">
-            <div class="box-content">
+<!--            <div class="box-content">
               <div class="slider-block">
                 <div class="slider-item">
                   <p class="demonstration">关节1</p>
@@ -51,6 +51,30 @@
                   <p class="demonstration">关节6</p>
                   <el-slider v-model="joint6" show-input :min="min" :max="max" :step="0.01" @input="sliderInput($event, '6', 'x')" />
                 </div>
+              </div>
+            </div>-->
+            <div class="box-content">
+              <div class="center-bold">机械臂控制</div>
+              <div class="button-container">
+                <el-button type="primary">设置为初始姿态</el-button>
+                <el-button type="danger">急停</el-button>
+                <el-button type="success">启动</el-button>
+              </div>
+              <div class="center-bold">夹爪设置</div>
+              <div class="input-container">
+                <div class="input-item">
+                  <span>夹爪宽度：</span>
+                  <el-input-number v-model="gripperWidth" :min="0" :max="100"></el-input-number>
+                </div>
+                <div class="input-item">
+                  <span>夹爪速度：</span>
+                  <el-input-number v-model="gripperSpeed" :min="0" :max="100"></el-input-number>
+                </div>
+              </div>
+              <div class="center-bold">夹爪状态</div>
+              <div class="status-container">
+                <el-tag :type="isConnected ? 'success' : 'danger'">{{ isConnected ? '已连接' : '未连接' }}</el-tag>
+                <el-button @click="toggleConnection">{{ isConnected ? '断开' : '连接' }}</el-button>
               </div>
             </div>
           </template>
@@ -144,7 +168,6 @@ import { GridLayout, GridItem } from 'vue-grid-layout'
 import HomeRobotData from '@/components/HomeRobotData.vue'
 import { str2Date } from '@/libs/data'
 import axios from 'axios'
-import Menu from '@/components/RobotControl'
 import RobotModel from '@/components/robotModel'
 Vue.component('d2-grid-layout', GridLayout)
 Vue.component('d2-grid-item', GridItem)
@@ -172,7 +195,6 @@ export default {
   name: 'PageDemoPage1',
   components: {
     HomeRobotData,
-    Menu,
     RobotModel
   },
   data () {
@@ -182,8 +204,8 @@ export default {
         layout: [
           { x: 0, y: 0, w: 6, h: 4, i: '0' },
           { x: 6, y: 0, w: 6, h: 4, i: '1' },
-          { x: 0, y: 4, w: 9, h: 15, i: '2', isDraggable: false },
-          { x: 9, y: 4, w: 3, h: 15, i: '3' },
+          { x: 0, y: 4, w: 8, h: 15, i: '2', isDraggable: false },
+          { x: 8, y: 4, w: 4, h: 15, i: '3' },
           { x: 0, y: 16, w: 12, h: 14, i: '4' }
         ],
         colNum: 12,
@@ -245,47 +267,9 @@ export default {
         ry: 0,
         rz: 0
       },
-      joint1: 0,
-      joint2: 0,
-      joint3: 0,
-      joint4: 0,
-      joint5: 0,
-      joint6: 0,
-      min: -180,
-      max: 180
-    }
-  },
-  watch: {
-    // 监听所有关节角度的变化
-    joint1 (newValue, oldValue) {
-      if (newValue !== oldValue) {
-        this.sendCommandToBackend('joint1', newValue)
-      }
-    },
-    joint2 (newValue, oldValue) {
-      if (newValue !== oldValue) {
-        this.sendCommandToBackend('joint2', newValue)
-      }
-    },
-    joint3 (newValue, oldValue) {
-      if (newValue !== oldValue) {
-        this.sendCommandToBackend('joint3', newValue)
-      }
-    },
-    joint4 (newValue, oldValue) {
-      if (newValue !== oldValue) {
-        this.sendCommandToBackend('joint4', newValue)
-      }
-    },
-    joint5 (newValue, oldValue) {
-      if (newValue !== oldValue) {
-        this.sendCommandToBackend('joint5', newValue)
-      }
-    },
-    joint6 (newValue, oldValue) {
-      if (newValue !== oldValue) {
-        this.sendCommandToBackend('joint6', newValue)
-      }
+      gripperWidth: 0,
+      gripperSpeed: 0,
+      isConnected: false
     }
   },
   mounted () {
@@ -302,6 +286,9 @@ export default {
     }, 1500) // 每隔0.5秒更新一次数据
   },
   methods: {
+    toggleConnection () {
+      this.isConnected = !this.isConnected
+    },
     handleDateChange () {
       this.getData()
     },
@@ -373,18 +360,6 @@ export default {
         this.joint6 = response.data.current_position[5]
       }).catch(error => {
         console.error('Error fetching gripper data:', error)
-      })
-    },
-    sendCommandToBackend (joint, angle) {
-      // 向后台发送执行指令的逻辑
-      // 可以使用axios或其他方式发送请求到后台
-      console.log(`发送指令给后台：关节${joint} 角度${angle}`)
-      axios.post('/api/change_joint_angle', {
-        joint_values: [this.joint1, this.joint2, this.joint3, this.joint4, this.joint5, this.joint6]
-      }).then(response => {
-        console.log('后台响应：', response.data)
-      }).catch(error => {
-        console.error('请求失败：', error)
       })
     }
   }
