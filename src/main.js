@@ -12,13 +12,12 @@ import router from './router'
 import { menuHeader, menuAside } from '@/menu'
 import { frameInRoutes } from '@/router/routes'
 import Chat from 'vue-beautiful-chat'
-import VueTour from 'vue-tour'
+import VCharts from 'v-charts'
 
 // 核心插件
 Vue.use(d2Admin)
-Vue.use(VueTour)
 Vue.use(Chat)
-
+Vue.use(VCharts)
 
 new Vue({
   router,

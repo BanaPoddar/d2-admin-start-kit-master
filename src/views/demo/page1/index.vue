@@ -14,12 +14,9 @@
         <el-card shadow="never" class="page_card">
           <template v-if="item.i === '0'">
             <el-tag size="mini" type="info" slot="header"> {{item.i}}智慧语音助手</el-tag>
-            <div class="chat-container">
-              <div class="messages-display">
-                <!-- 在这里显示消息 -->
-              </div>
+            <div>
+              <ve-line :data="chartData"></ve-line>
             </div>
-            <d2-icon name="github" style="font-size: 100px;"/>
           </template>
           <template v-if="item.i === '1'">
             <el-tag size="mini" type="info" slot="header">{{item.i}}待抓取物品列表 </el-tag>
@@ -37,10 +34,16 @@
 <script>
 import Vue from 'vue'
 import { GridLayout, GridItem } from 'vue-grid-layout'
+import VeLine from 'v-charts/lib/line.common'
+import HomeRobotData from '@/components/HomeRobotData.vue'
+import RobotModel from '@/components/robotModel.vue'
 Vue.component('d2-grid-layout', GridLayout)
 Vue.component('d2-grid-item', GridItem)
 export default {
   name: 'PageDemoPage1',
+  components: {
+    VeLine
+  },
   data () {
     return {
       layout: {
@@ -57,6 +60,17 @@ export default {
         verticalCompact: true,
         margin: [10, 10],
         useCssTransforms: true
+      },
+      chartData: {
+        columns: ['date', 'PV'],
+        rows: [
+          { date: '01-01', PV: 1231 },
+          { date: '01-02', PV: 1223 },
+          { date: '01-03', PV: 2123 },
+          { date: '01-04', PV: 4123 },
+          { date: '01-05', PV: 3123 },
+          { date: '01-06', PV: 7123 }
+        ]
       }
     }
   },

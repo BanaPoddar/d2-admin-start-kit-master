@@ -1,19 +1,20 @@
 <template>
   <d2-container type="card">
-
     <template slot="header">姿态同步</template>
     <div style="height: 900px; margin: -16px;">
       <SplitPane :min-percent='20' :default-percent='36' split="vertical">
+        <!--左侧画面 姿态摄像头画面/注意事项/开始结束同步按钮 -->
         <template slot="paneL">
           <SplitPane split="horizontal" :default-percent='50'>
+            <!--左上画面 姿态摄像头画面 -->
             <template slot="paneL">
               <div style="margin: 10px;">
-                <!--摄像头画面不超过paneL范围；使用:class绑定来动态改变摄像头画面的样式 -->
                 <img :src="videoFeedUrl" style="width: 100%; height: 100%;" :class="{ 'grayscale': !isCameraActive }" />
               </div>
             </template>
             <template slot="paneR">
               <SplitPane split="horizontal" :default-percent='30'>
+                <!--左中画面 注意事项 -->
                 <template slot="paneL">
                   <el-tag size="mini" type="info" slot="header">注意事项</el-tag>
                   <div style="margin: 10px;">
@@ -22,9 +23,9 @@
                     <div>2.点击“退出同步”后，请让<span style="font-weight: bold; color: red;">手掌</span>出现在在摄像头画面内确保退出</div>
                   </div>
                 </template>
+                <!--左下画面 开始结束同步按钮 -->
                 <template slot="paneR">
                   <div style="margin: 10px;text-align: center;">
-                    <!--使得两个按钮居中-->
                     <el-button type="primary" size="medium" @click="startSync">开始同步</el-button>
                     <el-button type="danger" size="medium" @click="stopSync">退出同步</el-button>
                   </div>
@@ -33,6 +34,7 @@
             </template>
           </SplitPane>
         </template>
+        <!--右侧画面 人体/人体预测/机械臂/误差相关数据 -->
         <template slot="paneR">
               <div style="margin: 10px;">
               <el-card class="human-pose-data" style="margin: 10px;text-align: center;">
@@ -123,29 +125,13 @@ export default {
   },
   data: function () {
     return {
-      isCameraActive: true,
-      videoFeedUrl: '/api/camera/pose', // 后端Flask接口地址
-      participants: [
-        { i: '1' },
-        { i: '2' },
-        { i: '3' },
-        { i: '4' }
-      ],
-      steps: [
-        {
-          target: '.human-pose-data', // CSS选择器，指向你想要突出显示的元素
-          content: '这是人体姿态数据区域，你可以在这里查看人体姿态的相关数据。'
-        },
-        {
-          target: '.robot-prediction-data',
-          content: '这是机械臂预测数据区域，你可以在这里查看机械臂的预测数据。'
-        }
-      ],
-      showTour: true,
-      anglesData: [], // 存储同步姿态数据
-      calculateData: [], // 存储计算数据
-      robot_data: [], // 存储机械臂数据
-      gripperData: '', // 存储夹爪相关数据
+      isCameraActive: true, // 摄像头是否激活状态(不为灰)
+      videoFeedUrl: '/api/camera/pose', // 后端姿态摄像头画面的URL
+      anglesData: [], // 人体姿态数据
+      calculateData: [], // 人体姿态预测数据
+      robot_data: [], // 机械臂数据
+      gripperData: '', // 夹爪宽度数据
+      // 误差数据
       errorData: {
         joint3: '',
         joint4: '',
@@ -155,39 +141,27 @@ export default {
     }
   },
   mounted () {
-    // 加载完成后显示提示
-    this.showInfo()
+    // 加载完成后显示欢迎提示
+    this.showWelcomeInfo()
   },
   created () {
-    this.fetchData() // 在组件创建时调用获取数据的方法
-    this.fetchRobotData()
-    this.fetchGripperData() // 调用获取夹爪相关数据的方法
-    setInterval(this.fetchData, 500) // 每隔0.5秒获取一次数据
+    this.fetchPoseData() // 获取人体姿态相关数据
+    this.fetchRobotData()// 获取机械臂相关数据
+    this.fetchGripperData() // 获取夹爪相关数据
+    setInterval(this.fetchPoseData, 500) // 每隔0.5秒获取一次人体姿态数据
     setInterval(this.fetchRobotData, 500) // 每隔0.5秒获取一次机器人数据
     setInterval(this.fetchGripperData, 500) // 每隔0.5秒获取一次夹爪相关数据
   },
   methods: {
-    // 显示提示
-    showInfo () {
+    // 显示欢迎提示
+    showWelcomeInfo () {
       this.$notify({
         title: '提示',
         message: '欢迎使用同步姿态功能！请起立背起右手'
       })
     },
-    // 获取测试数据
-    getVideoFeedUrl () {
-      axios.get('/api/test').then(response => {
-        console.log(response.data)
-      }).catch(error => {
-        console.log(error)
-      })
-    },
-    // 抓取物体
-    grasp (index, row) {
-      console.log(index, row)
-    },
-    fetchData () {
-      // 使用axios或其他方法从后台获取数据
+    // 获取人体姿态相关数据
+    fetchPoseData () {
       axios.get('/api/sync/get_sync_data')
         .then(response => {
           this.anglesData = response.data.data // 将后台返回的数据赋值给anglesData变量
@@ -228,6 +202,7 @@ export default {
           console.error('Error fetching data:', error)
         })
     },
+    // 获取机械臂相关数据
     fetchRobotData () {
       // 使用axios或其他方法从后台获取数据
       axios.get('/api/get_current_angle') // 更新 API 地址
@@ -245,6 +220,7 @@ export default {
           console.error('Error fetching data:', error)
         })
     },
+    // 获取夹爪相关数据
     fetchGripperData () {
       // 使用axios或其他方法从后台获取夹爪相关数据
       axios.get('/api/gripper/get_gripper_info')
@@ -282,6 +258,14 @@ export default {
         .catch(error => {
           console.error('Error stopping sync:', error)
         })
+    },
+    // 获取测试数据
+    getVideoFeedUrl () {
+      axios.get('/api/test').then(response => {
+        console.log(response.data)
+      }).catch(error => {
+        console.log(error)
+      })
     }
   }
 }

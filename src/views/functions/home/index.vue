@@ -7,6 +7,7 @@
         :key="index"
         v-bind="item">
         <el-card shadow="never" class="page_card">
+          <!-- 卡片1 机械臂位置(m)展示-->
           <template v-if="item.i === '0'">
             <div class="center-bold">机械臂位置(m)</div>
             <div class="data-display-container">
@@ -15,6 +16,7 @@
               <home-robot-data :value="armPosition.z" label="Z" style="width: 33%"/>
             </div>
           </template>
+          <!-- 卡片2 机械臂姿态(deg)展示-->
           <template v-if="item.i === '1'">
             <div class="center-bold">机械臂姿态(deg)</div>
             <div class="data-display-container">
@@ -23,12 +25,14 @@
               <home-robot-data :value="armPose.rz" label="RZ" style="width: 33%"/>
             </div>
           </template>
+          <!-- 卡片3 机械臂3D仿真+关节控制-->
           <template v-if="item.i === '2'">
             <div class="box-content">
-              <!-- three.js 3D模型 -->
+              <!-- isAsync 仿真模式/真实模式 joints-changed 获得实时更新的关节角度值数组-->
               <robot-model ref="robotModel" :isAsync="isAsync" @joints-changed="updateJoints"/>
             </div>
           </template>
+          <!-- 卡片4 机械臂/夹爪控制中心-->
           <template v-if="item.i === '3'">
             <div class="box-content">
               <div class="left-align">机械臂控制</div>
@@ -60,21 +64,21 @@
                 <div class="input-item">
                   <span>夹爪速度：</span>
                   <el-input-number v-model="gripperSpeed" :min="0" :max="255" :disabled="gripperStatus !== '已激活'"></el-input-number>
-                  <el-button type="primary" @click="setGripperWidth" :disabled="gripperStatus !== '已激活'" style="margin-left: 10px">设置速度</el-button>
+                  <el-button type="primary" @click="setGripperSpeed" :disabled="gripperStatus !== '已激活'" style="margin-left: 10px">设置速度</el-button>
                   <span style="margin-left: 10px">(最小:0 | 最大:255)</span>
                 </div>
                 <div class="input-item">
                   <span>夹爪力度：</span>
                   <el-input-number v-model="gripperForce" :min="0" :max="255" :disabled="gripperStatus !== '已激活'"></el-input-number>
-                  <el-button type="primary" @click="setGripperWidth" :disabled="gripperStatus !== '已激活'" style="margin-left: 10px">设置力度</el-button>
+                  <el-button type="primary" @click="setGripperForce" :disabled="gripperStatus !== '已激活'" style="margin-left: 10px">设置力度</el-button>
                   <span style="margin-left: 10px">(最小:0 | 最大:255)</span>
                 </div>
               </div>
             </div>
           </template>
+          <!-- 卡片5 机械臂启动情况/耗电量图标echarts展示-->
           <template v-if="item.i === '4'">
             <div class="box-content">
-              <!-- Echart 图表展示 -->
               <div class="statistics-layout" id="robot-usage">
                 <el-row>
                   <el-col :span="4">
@@ -118,7 +122,7 @@
                       <el-date-picker
                         style="float: right;z-index: 1"
                         size="small"
-                        v-model="orderCountDate"
+                        v-model="utilizationDate"
                         type="daterange"
                         align="right"
                         unlink-panels
@@ -128,8 +132,15 @@
                         @change="handleDateChange"
                         :picker-options="pickerOptions">
                       </el-date-picker>
+                      <div>
+                        <ve-line
+                          :data="chartData"
+                          :legend-visible="false"
+                          :loading="loading"
+                          :data-empty="dataEmpty"
+                          :settings="chartSettings"></ve-line>
+                      </div>
                     </div>
-                    <div ref="chart" style="width: 100%; height: 100%;"></div>
                   </el-col>
                 </el-row>
               </div>
@@ -148,39 +159,40 @@ import HomeRobotData from '@/components/HomeRobotData.vue'
 import { str2Date } from '@/libs/data'
 import axios from 'axios'
 import RobotModel from '@/components/robotModel'
-import * as echarts from 'echarts'
+import VeLine from 'v-charts/lib/line.common'
 Vue.component('d2-grid-layout', GridLayout)
 Vue.component('d2-grid-item', GridItem)
+// echarts图表内静态数据
 const DATA_FROM_BACKEND = {
-  columns: ['date', 'orderCount', 'orderAmount'],
+  columns: ['date', 'utilization', 'eleConsumption'],
   rows: [
-    { date: '2024-03-01', orderCount: 1, orderAmount: 10.93 },
-    { date: '2024-03-02', orderCount: 2, orderAmount: 22.30 },
-    { date: '2024-03-03', orderCount: 3, orderAmount: 36.23 },
-    { date: '2024-03-04', orderCount: 7, orderAmount: 64.23 },
-    { date: '2024-03-05', orderCount: 4, orderAmount: 84.92 },
-    { date: '2024-03-06', orderCount: 3, orderAmount: 62.93 },
-    { date: '2024-03-07', orderCount: 9, orderAmount: 22.93 },
-    { date: '2024-03-08', orderCount: 2, orderAmount: 62.93 },
-    { date: '2024-03-09', orderCount: 3, orderAmount: 52.93 },
-    { date: '2024-03-10', orderCount: 4, orderAmount: 32.93 },
-    { date: '2024-03-11', orderCount: 8, orderAmount: 22.93 },
-    { date: '2024-03-12', orderCount: 3, orderAmount: 82.92 },
-    { date: '2024-03-13', orderCount: 4, orderAmount: 10.23 },
-    { date: '2024-03-14', orderCount: 9, orderAmount: 12.93 },
-    { date: '2024-03-15', orderCount: 3, orderAmount: 42.93 }
+    { date: '2024-03-01', utilization: 1, eleConsumption: 10.93 },
+    { date: '2024-03-02', utilization: 2, eleConsumption: 22.30 },
+    { date: '2024-03-03', utilization: 3, eleConsumption: 36.23 },
+    { date: '2024-03-04', utilization: 7, eleConsumption: 64.23 },
+    { date: '2024-03-05', utilization: 4, eleConsumption: 84.92 },
+    { date: '2024-03-06', utilization: 3, eleConsumption: 62.93 },
+    { date: '2024-03-07', utilization: 9, eleConsumption: 22.93 },
+    { date: '2024-03-08', utilization: 2, eleConsumption: 62.93 },
+    { date: '2024-03-09', utilization: 3, eleConsumption: 52.93 },
+    { date: '2024-03-10', utilization: 4, eleConsumption: 32.93 },
+    { date: '2024-03-11', utilization: 8, eleConsumption: 22.93 },
+    { date: '2024-03-12', utilization: 3, eleConsumption: 82.92 },
+    { date: '2024-03-13', utilization: 4, eleConsumption: 10.23 },
+    { date: '2024-03-14', utilization: 9, eleConsumption: 12.93 },
+    { date: '2024-03-15', utilization: 3, eleConsumption: 42.93 }
   ]
 }
 export default {
-  name: 'PageDemoPage1',
+  name: 'HomeRobot',
   components: {
     HomeRobotData,
-    RobotModel
+    RobotModel,
+    VeLine
   },
   data () {
     return {
-      chart: null,
-      myValue: 3.21,
+      // 布局设置
       layout: {
         layout: [
           { x: 0, y: 0, w: 6, h: 4, i: '0' },
@@ -198,16 +210,42 @@ export default {
         margin: [10, 10],
         useCssTransforms: true
       },
-      machineArmPosition: {
+      // 机械臂位置数据
+      armPosition: {
         x: 0,
         y: 0,
         z: 0
       },
-      machineArmPose: {
-        dx: 0.123123,
-        dy: 0.123123,
-        dz: 0.123123
+      // 机械臂姿态数据
+      armPose: {
+        rx: 0,
+        ry: 0,
+        rz: 0
       },
+      // 机械臂关节角度数据
+      joints: [0, 0, 1.57, 0, 1.57, 0],
+      // true仿真模式(异步发送关节变化数据)/false真实模式(同步发送关节变化数据)
+      isAsync: true,
+      // 夹爪相关数据
+      gripperWidth: 0,
+      gripperSpeed: 255,
+      gripperForce: 150,
+      gripperStatus: '未使用',
+      // 图表设置参数
+      chartSettings: {
+        xAxisType: 'time',
+        area: true,
+        axisSite: { right: ['eleConsumption'] },
+        labelMap: { utilization: '启动次数', eleConsumption: '耗电量' }
+      },
+      loading: false,
+      dataEmpty: false,
+      // 图表数据
+      chartData: {
+        columns: [],
+        rows: []
+      },
+      // 图表时间选择器中的方法选项
       pickerOptions: {
         shortcuts: [{
           text: '最近一周',
@@ -219,65 +257,22 @@ export default {
         }, {
           text: '最近一月',
           onClick (picker) {
-            const start = new Date(2024, 3, 15)
+            const start = new Date(2024, 3, 1)
             const end = new Date(start.getTime() + 1000 * 60 * 60 * 24 * 30)
             picker.$emit('pick', [start, end])
           }
         }]
       },
-      orderCountDate: '',
-      chartSettings: {
-        xAxisType: 'time',
-        area: true,
-        axisSite: { right: ['orderAmount'] },
-        labelMap: { orderCount: '启动次数', orderAmount: '耗电量' }
-      },
-      chartData: {
-        columns: [],
-        rows: []
-      },
-      loading: true,
-      dataEmpty: false,
-      armPosition: {
-        x: 0,
-        y: 0,
-        z: 0
-      },
-      armPose: {
-        rx: 0,
-        ry: 0,
-        rz: 0
-      },
-      gripperWidth: 0,
-      gripperSpeed: 255,
-      gripperForce: 150,
-      isConnected: false,
-      gripperStatus: '未使用',
-      isAsync: true,
-      joints: [0, 0, 1.57, 0, 1.57, 0]
+      // 时间选择器数据
+      utilizationDate: ''
     }
   },
   mounted () {
-    // 加载完成后显示提示
-    this.showInfo()
-    this.chart = echarts.init(this.$refs.chart)
-    this.chart.setOption({
-      title: {
-        text: 'ECharts 示例'
-      },
-      tooltip: {},
-      xAxis: {
-        data: ['A', 'B', 'C', 'D', 'E', 'F']
-      },
-      yAxis: {},
-      series: [{
-        name: '数量',
-        type: 'bar',
-        data: [5, 20, 36, 10, 10, 20]
-      }]
-    })
+    // 加载完成后显示页面初始提示
+    this.showWelcomeInfo()
   },
   computed: {
+    // 夹爪按钮文本
     gripperButtonLabel () {
       if (this.gripperStatus === '未使用' || this.gripperStatus === '已激活') {
         return '复位(重置)'
@@ -287,16 +282,46 @@ export default {
     }
   },
   created () {
-    this.initOrderCountDate()
-    this.getData()
+    // 获取机械臂当前位置和姿态
     this.getCurrentPose()
-    this.getCurrentAngle()
     setInterval(() => {
       this.getCurrentPose()
     }, 1500) // 每隔0.5秒更新一次数据
+    // 初始化图表默认选择的时间段
+    this.initDefaultDate()
+    // 获取图表数据
+    this.getChartData()
   },
   methods: {
+    // 显示页面初始提示
+    showWelcomeInfo () {
+      this.$notify({
+        title: '提示',
+        message: '欢迎进入机械臂数据控制中心！'
+      })
+    },
+    // 获取机械臂当前位置和姿态
+    getCurrentPose () {
+      axios.get('/api/get_current_pose').then(response => {
+        this.armPose = response.data.current_pose.deg
+        this.armPose.rx = this.armPose.rx.toFixed(5)
+        this.armPose.ry = this.armPose.ry.toFixed(5)
+        this.armPose.rz = this.armPose.rz.toFixed(5)
+        this.armPosition = response.data.current_pose.position
+        this.armPosition.x = this.armPosition.x.toFixed(5)
+        this.armPosition.y = this.armPosition.y.toFixed(5)
+        this.armPosition.z = this.armPosition.z.toFixed(5)
+      }).catch(error => {
+        console.error('Error fetching gripper data:', error)
+      })
+    },
+    // 更新关节角度数据
+    updateJoints (newJoints) {
+      this.joints = newJoints
+    },
+    // 设置机械臂回到初始位置
     setHomePose () {
+      // eslint-disable-next-line no-undef
       const joint_values = [0, 0, 1.57, 0, 1.57, 1]
       // 发送给后端 真实运动
       axios.post('/api/change_joint_angle', { joint_values })
@@ -313,6 +338,7 @@ export default {
           console.error('请求失败：', error)
         })
     },
+    // 确认切换模式
     confirmModeChange (newVal) {
       if (!newVal) {
         this.$confirm('警告：真实模式机械臂可能发生剧烈抖动，您确定关闭仿真模式吗?', '提示', {
@@ -326,12 +352,9 @@ export default {
         })
       }
     },
-    updateJoints (newJoints) {
-      // 更新home/index.vue组件的数据
-      this.joints = newJoints
-    },
+    // 异步发送关节数据
     sendJointData () {
-      // 在这里添加发送关节数据的逻辑
+      // eslint-disable-next-line no-undef
       const joint_values = this.joints
       console.log('joint_values:', joint_values)
       axios.post('/api/change_joint_angle', { joint_values })
@@ -346,6 +369,7 @@ export default {
           console.error('请求失败：', error)
         })
     },
+    // 设置夹爪状态
     toggleGripperStatus () {
       if (this.gripperStatus === '未使用') {
         this.gripperStatus = '已复位'
@@ -375,25 +399,28 @@ export default {
         this.gripperStatus = '已复位'
       }
     },
+    // 设置日期变化
     handleDateChange () {
-      this.getData()
+      this.getChartData()
     },
-    initOrderCountDate () {
+    // 初始化默认时间段
+    initDefaultDate () {
       const start = new Date(2024, 2, 1)
-      const end = new Date(start.getTime() + 1000 * 60 * 60 * 24 * 7)
-      this.orderCountDate = [start, end]
+      const end = new Date(start.getTime() + 1000 * 60 * 60 * 24 * 15)
+      this.utilizationDate = [start, end]
     },
-    getData () {
+    // 获取图表数据
+    getChartData () {
       setTimeout(() => {
         this.chartData = {
-          columns: ['date', 'orderCount', 'orderAmount'],
+          columns: ['date', 'utilization', 'eleConsumption'],
           rows: []
         }
         for (let i = 0; i < DATA_FROM_BACKEND.rows.length; i++) {
           const item = DATA_FROM_BACKEND.rows[i]
           const currDate = str2Date(item.date)
-          const start = this.orderCountDate[0]
-          const end = this.orderCountDate[1]
+          const start = this.utilizationDate[0]
+          const end = this.utilizationDate[1]
           if (currDate.getTime() >= start.getTime() && currDate.getTime() <= end.getTime()) {
             this.chartData.rows.push(item)
           }
@@ -401,52 +428,6 @@ export default {
         this.dataEmpty = false
         this.loading = false
       }, 1000)
-    },
-    log (arg1 = 'log', ...logs) {
-      if (logs.length === 0) {
-        console.log(arg1)
-      } else {
-        console.group(arg1)
-        logs.forEach(e => {
-          console.log(e)
-        })
-        console.groupEnd()
-      }
-    },
-    // 显示提示
-    showInfo () {
-      this.$notify({
-        title: '提示',
-        message: '欢迎进入机械臂数据大屏！'
-      })
-    },
-    getCurrentPose () {
-      axios.get('/api/get_current_pose').then(response => {
-        this.armPose = response.data.current_pose.deg
-        this.armPose.rx = this.armPose.rx.toFixed(5)
-        this.armPose.ry = this.armPose.ry.toFixed(5)
-        this.armPose.rz = this.armPose.rz.toFixed(5)
-        this.armPosition = response.data.current_pose.position
-        this.armPosition.x = this.armPosition.x.toFixed(5)
-        this.armPosition.y = this.armPosition.y.toFixed(5)
-        this.armPosition.z = this.armPosition.z.toFixed(5)
-      }).catch(error => {
-        console.error('Error fetching gripper data:', error)
-      })
-    },
-    getCurrentAngle () {
-      // 使用 axios发送请求到 http://127.0.0.1:5000/get_current_angle
-      axios.get('/api/get_current_angle').then(response => {
-        console.log(response.data)
-        this.joint1 = response.data.current_position[0]
-        this.joint2 = response.data.current_position[1]
-        this.joint3 = response.data.current_position[2]
-        this.joint4 = response.data.current_position[3]
-        this.joint5 = response.data.current_position[4]
-        this.joint6 = response.data.current_position[5]
-      }).catch(error => {
-        console.error('Error fetching gripper data:', error)
-      })
     }
   }
 }

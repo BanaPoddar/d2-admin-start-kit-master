@@ -7,6 +7,7 @@
         :key="index"
         v-bind="item">
         <el-card shadow="never" class="page_card">
+          <!--卡片1 智慧语音助手(聊天对话框)-->
           <template v-if="item.i === '0'">
             <el-tag size="mini" type="info" slot="header"> {{item.i}}智慧语音助手</el-tag>
             <div>
@@ -20,7 +21,6 @@
                 :show-files="false"
                 :textarea-action-enabled="true"
                 :room-actions="JSON.stringify(roomsActions)"
-                :style="JSON.stringify(chatStyle)"
                 :templates-text="JSON.stringify(templatesText)"
                 :text-messages="JSON.stringify(textMessages)"
                 @send-message="adcanced_sendMessage($event.detail[0])"
@@ -30,9 +30,10 @@
               />
             </div>
           </template>
-          <template v-if="item.i === '1'" style ="display: flex;flex-direction: column;overflow-y: auto;height: 100%;">
+          <!--卡片2 待抓取物品列表-->
+          <template v-if="item.i === '1'">
             <el-tag size="mini" type="info" slot="header">{{item.i}}待抓取物品列表 </el-tag>
-            <div class="item-list" style="display: flex;flex-direction: column;overflow-y: auto;height: 100%;">
+            <div class="item-list" >
               <el-card v-for="item in itemList" :key="item.id" class="item-card">
                 <div class="item-content">
                   <img :src="item.imageURL" class="item-image" />
@@ -47,42 +48,16 @@
               </el-card>
             </div>
           </template>
+          <!--卡片3 抓取摄像头画面-->
           <template v-if="item.i === '2'">
             <el-tag size="mini" type="info" slot="header">{{item.i}}物品摄像头画面</el-tag>
             <div style="text-align: center;">
-              <!--图像居中,设置最大宽度为100px-->
               <img :src="videoFeedUrl" style="max-width: 80%; height: auto;" />
             </div>
           </template>
         </el-card>
       </d2-grid-item>
     </d2-grid-layout>
-    <div>
-      <beautiful-chat
-        :participants="participants"
-        :titleImageUrl="titleImageUrl"
-        :onMessageWasSent="onMessageWasSent"
-        :messageList="messageList"
-        :newMessagesCount="newMessagesCount"
-        :isOpen="isChatOpen"
-        :close="closeChat"
-        :icons="icons"
-        :open="openChat"
-        :showEmoji="true"
-        :showFile="true"
-        :showEdition="true"
-        :showDeletion="true"
-        :showTypingIndicator="showTypingIndicator"
-        :showLauncher="true"
-        :showCloseButton="true"
-        :colors="colors"
-        :showHeader="false"
-        :alwaysScrollToBottom="alwaysScrollToBottom"
-        :disableUserListToggle="false"
-        :messageStyling="messageStyling"
-        @onType="handleOnType"
-        @edit="editMessage" />
-    </div>
   </d2-container>
 </template>
 
@@ -99,38 +74,7 @@ export default {
   name: 'chatControl',
   data () {
     return {
-      roomsActions: [
-        { name: 'inviteUser', title: '测试下拉' },
-        { name: 'removeUser', title: 'Remove User' },
-        { name: 'deleteRoom', title: 'Delete Room' }
-      ],
-      templatesText: [
-        { tag: '初始姿态', text: '设置为初始姿态' },
-        { tag: '关节一', text: '关节一旋转5度' },
-        { tag: '关节二', text: '关节二旋转6度' },
-        { tag: '关节三', text: '关节三旋转5度' },
-        { tag: '关节四', text: '关节四旋转6度' },
-        { tag: '关节五', text: '关节五旋转6度' },
-        { tag: '关节六', text: '关节六旋转4度' },
-        { tag: '抓取罐子', text: '抓取罐子然后放到粉色框中' },
-        { tag: '抓取盒子', text: '抓取盒子然后放到蓝色框中' },
-        { tag: '抓取瓶子', text: '抓取瓶子然后放到绿色框中' }
-      ],
-      textMessages: {
-        ROOMS_EMPTY: '无聊天',
-        ROOM_EMPTY: '未选中聊天',
-        NEW_MESSAGES: '新消息',
-        MESSAGE_DELETED: '消息已删除',
-        MESSAGES_EMPTY: '无消息',
-        CONVERSATION_STARTED: '聊天开始于:',
-        TYPE_MESSAGE: '请输入你的指令',
-        SEARCH: '搜索',
-        IS_ONLINE: '在线',
-        LAST_SEEN: 'last seen ',
-        IS_TYPING: '正在输入...',
-        CANCEL_SELECT_MESSAGE: '取消'
-      },
-      itemList: [],
+      // 布局设置
       layout: {
         layout: [
           { x: 0, y: 0, w: 7, h: 20, i: '0', isDraggable: false },
@@ -146,48 +90,8 @@ export default {
         margin: [10, 10],
         useCssTransforms: true
       },
-      participants: [
-        {
-          id: 'user1',
-          name: 'ROBOT-e5',
-          imageUrl: 'https://avatars3.githubusercontent.com/u/1915989?s=230&v=4'
-        }
-      ], // the list of all the participant of the conversation. `name` is the user name, `id` is used to establish the author of a message, `imageUrl` is supposed to be the user avatar.
-      titleImageUrl: 'https://a.slack-edge.com/66f9/img/avatars-teams/ava_0001-34.png',
-      messageList: [
-        { type: 'text', author: 'user1', data: { text: '欢迎使用智慧语音助手！' } }
-      ], // the list of the messages to show, can be paginated and adjusted dynamically
-      newMessagesCount: 0,
-      isChatOpen: false, // to determine whether the chat window should be open or closed
-      showTypingIndicator: '', // when set to a value matching the participant.id it shows the typing indicator for the specific user
-      colors: {
-        header: {
-          bg: '#4e8cff',
-          text: '#ffffff'
-        },
-        launcher: {
-          bg: '#4e8cff'
-        },
-        messageList: {
-          bg: '#ffffff'
-        },
-        sentMessage: {
-          bg: '#4e8cff',
-          text: '#ffffff'
-        },
-        receivedMessage: {
-          bg: '#eaeaea',
-          text: '#222222'
-        },
-        userInput: {
-          bg: '#f4f7f9',
-          text: '#565867'
-        }
-      }, // specifies the color scheme for the component
-      alwaysScrollToBottom: false, // when set to true always scrolls the chat to the bottom when new events are in (new message, user starts typing...)
-      messageStyling: true, // when set to true allows the use of html in the messages
-      videoFeedUrl: 'api/camera/depth', // 后端Flask接口地址
-      currentUserId: '2', // vue-advanced-chat
+      // vue-advanced-chat
+      currentUserId: '2', // 当前用户ID
       rooms: [
         {
           roomId: '1',
@@ -203,109 +107,72 @@ export default {
           roomName: 'Aubo_i5',
           avatar: robotIamge,
           users: [
-            { _id: '1', username: 'me' },
+            { _id: '2', username: 'me' },
             { _id: '3', username: 'AuboI5Robot' }
           ]
         }
       ],
       messages: [],
       messagesLoaded: false,
-      chatStyle: "{general: {color: '#0a0a0a',colorSpinner: '#333',borderStyle: '1px solid #e1e4e8'},footer: {background: '#f8f9fa',backgroundReply: 'rgba(0, 0, 0, 0.08)'},icons: {search: '#9ca6af'}"
+      // 房间下拉菜单
+      roomsActions: [
+        { name: 'inviteUser', title: '邀请用户' },
+        { name: 'removeUser', title: '删除用户' },
+        { name: 'deleteRoom', title: '删除房间' }
+      ],
+      // 消息模板(键入“/”)
+      templatesText: [
+        { tag: '初始姿态', text: '设置为初始姿态' },
+        { tag: '关节一', text: '关节一旋转5度' },
+        { tag: '关节二', text: '关节二旋转6度' },
+        { tag: '关节三', text: '关节三旋转5度' },
+        { tag: '关节四', text: '关节四旋转6度' },
+        { tag: '关节五', text: '关节五旋转6度' },
+        { tag: '关节六', text: '关节六旋转4度' },
+        { tag: '抓取罐子', text: '抓取罐子然后放到粉色框中' },
+        { tag: '抓取盒子', text: '抓取盒子然后放到蓝色框中' },
+        { tag: '抓取瓶子', text: '抓取瓶子然后放到绿色框中' }
+      ],
+      // 聊天系统默认文本消息
+      textMessages: {
+        ROOMS_EMPTY: '无聊天',
+        ROOM_EMPTY: '未选中聊天',
+        NEW_MESSAGES: '新消息',
+        MESSAGE_DELETED: '消息已删除',
+        MESSAGES_EMPTY: '无消息',
+        CONVERSATION_STARTED: '聊天开始于:',
+        TYPE_MESSAGE: '请输入你的指令',
+        SEARCH: '搜索',
+        IS_ONLINE: '在线',
+        LAST_SEEN: 'last seen ',
+        IS_TYPING: '正在输入...',
+        CANCEL_SELECT_MESSAGE: '取消'
+      },
+      videoFeedUrl: 'api/camera/depth', // 抓取摄像头画面的URL
+      itemList: []
     }
   },
   mounted () {
-    // 加载完成后显示提示
-    this.showInfo()
+    // 加载完成后显示初始提示
+    this.showWelcomeInfo()
+    // 获取物品列表
     this.fetchItems()
   },
   methods: {
-    fetchItems () {
-      axios.get('/api/grasp/getRecognizedItems')
-        .then(response => {
-          // eslint-disable-next-line no-undef
-          const responseData = JSON.parse(response.data.data)
-          const items = Array.isArray(responseData) ? responseData : []
-          // 更新 itemList
-          this.itemList = items.map(item => ({
-            id: item.id,
-            class: item.class,
-            color: item.color,
-            position: item.position,
-            confidence: item.confidence,
-            imageURL: 'data:image/png;base64,' + item.image // 假设 "image" 包含 Base64 编码的图像数据
-          }))
-        })
-        .catch(error => {
-          console.error(error)
-        })
-    },
-    graspItem (name) {
-      try {
-        const response = axios.post('/api/grasp/startItemGrasp', null, {
-          params: {
-            item: name,
-            place: 'none'
-          }
-        })
-        // 处理后端返回的消息
-        const msg = response.data.msg
-        console.log('后端返回消息:', msg)
-      } catch (error) {
-        console.error('抓取物品失败:', error)
-      }
-    },
-    log (arg1 = 'log', ...logs) {
-      if (logs.length === 0) {
-        console.log(arg1)
-      } else {
-        console.group(arg1)
-        logs.forEach(e => {
-          console.log(e)
-        })
-        console.groupEnd()
-      }
-    },
-    // 显示提示
-    showInfo () {
+    // 显示初始提示
+    showWelcomeInfo () {
       this.$notify({
         title: '提示',
-        message: '欢迎使用语音助手!每个卡片可以随意拖动！'
+        message: '欢迎使用语音助手!点击停止符号可以使用语音输入功能！'
       })
     },
-    sendMessage (text) {
-      if (text.length > 0) {
-        this.newMessagesCount = this.isChatOpen ? this.newMessagesCount : this.newMessagesCount + 1
-        this.onMessageWasSent({ author: 'support', type: 'text', data: { text } })
-      }
+    // 聊天框添加初始欢迎消息
+    addMessages (reset) {
+      const messages = []
+      messages.push({ id: '1', content: '欢迎使用智慧语音助手！', senderId: '1', username: 'ROBOT-e5', date: new Date().toDateString(), timestamp: new Date().toString().substring(16, 21) })
+      return messages
     },
-    onMessageWasSent (message) {
-      // called when the user sends a message
-      this.messageList = [...this.messageList, message]
-    },
-    openChat () {
-      // called when the user clicks on the fab button to open the chat
-      this.isChatOpen = true
-      this.newMessagesCount = 0
-    },
-    closeChat () {
-      // called when the user clicks on the botton to close the chat
-      this.isChatOpen = false
-    },
-    handleScrollToTop () {
-      // called when the user scrolls message list to top
-      // leverage pagination for loading another page of messages
-    },
-    handleOnType () {
-      console.log('Emit typing event')
-    },
-    editMessage (message) {
-      const m = this.messageList.find(m => m.id === message.id)
-      m.isEdited = true
-      m.data.text = message.data.text
-    },
-    grasp (index, row) {
-      console.log(index, row)
-    },
+    // 获取历史消息
     fetchMessages ({ options = {} }) {
       setTimeout(() => {
         if (options.reset) {
@@ -317,11 +184,7 @@ export default {
         // this.addNewMessage()
       })
     },
-    addMessages (reset) {
-      const messages = []
-      messages.push({ id: '1', content: '欢迎使用智慧语音助手！', senderId: '1', username: 'ROBOT-e5', date: new Date().toDateString(), timestamp: new Date().toString().substring(16, 21) })
-      return messages
-    },
+    // 发送消息
     adcanced_sendMessage (message) {
       this.messages = [
         ...this.messages,
@@ -333,11 +196,12 @@ export default {
           date: new Date().toDateString()
         }
       ]
-      // 将消息通过axios发送给后端
+      // 将消息发送给后端
       axios.post('/api/chat/startchat', {
         commandStr: message.content
       }).then(response => {
         console.log(response.data)
+        // 逐一回复
         const reply = response.data.reply
         reply.forEach(element => {
           this.messages = [
@@ -367,6 +231,7 @@ export default {
         ]
       }
     },
+    // 添加新消息
     addNewMessage () {
       setTimeout(() => {
         this.messages = [
@@ -381,8 +246,9 @@ export default {
         ]
       }, 2000)
     },
-    voiceText (text) {
-      // 弹出提示：开始录音，请说话
+    // 语音识别功能(禁止按钮实现)
+    voiceText () {
+      // 弹出提示
       this.$notify({
         title: '提示',
         message: '开始录音，请说话，停止说话后将自动识别文本！'
@@ -400,7 +266,7 @@ export default {
       recognition.onresult = (event) => {
         const text = event.results[0][0].transcript
         console.log('识别到的文本:', text)
-        // 将text文本填入到输入框中
+        // 发送text文本的消息
         this.messages = [
           ...this.messages,
           {
@@ -416,12 +282,35 @@ export default {
           message: '识别完成！',
           type: 'success'
         })
+        // 将text文本消息发送给后端
+        axios.post('/api/chat/startchat', {
+          commandStr: text
+        }).then(response => {
+          console.log(response.data)
+          // 逐一回复
+          const reply = response.data.reply
+          reply.forEach(element => {
+            this.messages = [
+              ...this.messages,
+              {
+                _id: this.messages.length + 1, // 确保ID是唯一的
+                content: element, // 回复的消息内容
+                senderId: '1', // 这里应该是机器人或者服务器的ID
+                timestamp: new Date().toString().substring(16, 21),
+                date: new Date().toDateString()
+              }
+            ]
+          })
+        }).catch(error => {
+          console.log(error)
+        })
       }
       // 如果发生错误，打印错误信息
       recognition.onerror = (event) => {
         console.error('语音识别错误:', event.error)
       }
     },
+    // 房间下拉菜单事件处理(未完成)
     menuActionHandler ({ action, roomId }) {
       switch (action.name) {
         case 'inviteUser':
@@ -430,6 +319,43 @@ export default {
           return this.removeUser(roomId)
         case 'deleteRoom':
           return this.deleteRoom(roomId)
+      }
+    },
+    // 获取物品列表
+    fetchItems () {
+      axios.get('/api/grasp/getRecognizedItems')
+        .then(response => {
+          // eslint-disable-next-line no-undef
+          const responseData = JSON.parse(response.data.data)
+          const items = Array.isArray(responseData) ? responseData : []
+          // 更新 itemList
+          this.itemList = items.map(item => ({
+            id: item.id,
+            class: item.class,
+            color: item.color,
+            position: item.position,
+            confidence: item.confidence,
+            imageURL: 'data:image/png;base64,' + item.image // 假设 "image" 包含 Base64 编码的图像数据
+          }))
+        })
+        .catch(error => {
+          console.error(error)
+        })
+    },
+    // 指定物品抓取/指定位置放置
+    graspItem (name) {
+      try {
+        const response = axios.post('/api/grasp/startItemGrasp', null, {
+          params: {
+            item: name,
+            place: 'none'
+          }
+        })
+        // 处理后端返回的消息
+        const msg = response.data.msg
+        console.log('后端返回消息:', msg)
+      } catch (error) {
+        console.error('抓取物品失败:', error)
       }
     }
   }
@@ -448,6 +374,42 @@ export default {
       display: flex;
       flex-direction: column;
       overflow-y: auto; /* 启用垂直方向上的滚动条 */
+      .item-list {
+        display: flex;
+        flex-direction: column;
+        overflow-y: auto; /* 启用垂直方向上的滚动条 */
+        height: 100%; /* 占据父容器的所有可用高度 */
+      }
+      .item-card {
+        display: flex;
+        align-items: center;
+        padding: 10px;
+        margin-bottom: 10px;
+        border: 1px solid #ebeef5;
+        border-radius: 4px;
+      }
+      .item-content {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .item-image {
+        width: 100px;
+        height: 100px;
+        object-fit: cover;
+        margin-right: 10px;
+      }
+      .item-details {
+        flex: 1;
+      }
+
+      .item-details p {
+        margin: 5px 0;
+      }
+
+      .item-details p strong {
+        font-weight: bold;
+      }
     }
     .vue-resizable-handle {
       opacity: .3;
@@ -455,42 +417,6 @@ export default {
         opacity: 1;
       }
     }
-  }
-  .item-list {
-    display: flex;
-    flex-direction: column;
-    overflow-y: auto; /* 启用垂直方向上的滚动条 */
-    height: 100%; /* 占据父容器的所有可用高度 */
-  }
-  .item-card {
-    display: flex;
-    align-items: center;
-    padding: 10px;
-    margin-bottom: 10px;
-    border: 1px solid #ebeef5;
-    border-radius: 4px;
-  }
-  .item-content {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-  .item-image {
-    width: 100px;
-    height: 100px;
-    object-fit: cover;
-    margin-right: 10px;
-  }
-  .item-details {
-    flex: 1;
-  }
-
-  .item-details p {
-    margin: 5px 0;
-  }
-
-  .item-details p strong {
-    font-weight: bold;
   }
 }
 
