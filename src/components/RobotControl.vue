@@ -2,7 +2,7 @@
   <div class="slider-block">
     <div v-for="joint in joints" :key="joint.name" class="slider-item">
       <p class="demonstration">{{ joint.description }}</p>
-      <el-slider v-model.number="joint.value" show-input :min="min" :max="max" :step="0.01" @input="sliderInput($event,joint.name,joint.direction)" />
+      <el-slider v-model.number="joint.value" show-input :min="min" :max="max" :step="0.1" @input="sliderInput($event,joint.name,joint.direction)" />
     </div>
   </div>
 </template>

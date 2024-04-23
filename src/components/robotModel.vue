@@ -4,7 +4,7 @@
       <el-container>
         <div id="webgl">
           <Menu @sliderInput="sliderInput" @joints-changed="updateJoints" :isAsync="isAsync"/>
-          <el-button class="btn" type="primary" @click="testMsg">发送命令到后端</el-button>
+          <el-button class="btn" type="primary" @click="sendJointsData" v-if="isAsync">规划并执行</el-button>
         </div>
       </el-container>
     </div>
@@ -16,6 +16,7 @@ import Menu from '@/components/RobotControl'
 import * as THREE from 'three'
 import { OrbitControls } from '@three-ts/orbit-controls'
 import URDFLoader from 'urdf-loader'
+import axios from 'axios'
 
 export default {
   props: {
@@ -63,8 +64,23 @@ export default {
     })
   },
   methods: {
-    testMsg () {
+    sendJointsData () {
       console.log(this.joints)
+      const joint_values = this.joints
+      // 发送给后端 真实运动
+      axios.post('/api/change_joint_angle', { joint_values })
+        .then(response => {
+          // 给出提示
+          this.$notify({
+            title: '成功',
+            message: '机械臂成功执行运动！',
+            type: 'success'
+          })
+          // 设置3d模型关节的值
+          // this.$refs.robotModel.handleSetModelJointValues(joint_values)
+        }).catch(error => {
+          console.error('请求失败：', error)
+        })
     },
     updateJoints (newJoints) {
       this.joints = newJoints

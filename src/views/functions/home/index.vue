@@ -48,16 +48,26 @@
               <div class="input-item">
                 <div class="status-container">
                   <span>夹爪状态：</span>
-                  <el-tag :type="isConnected ? 'success' : 'danger'" class="tag-spacing">{{ isConnected ? '已连接' : '未连接' }}</el-tag>
-                  <el-button @click="toggleConnection" type="primary">{{ isConnected ? '断开' : '连接' }}</el-button>
+                  <el-tag :type="gripperStatus === '未使用' ? 'info' : gripperStatus === '已复位' ? 'warning' : 'success'" class="tag-spacing">{{ gripperStatus }}</el-tag>
+                  <el-button @click="toggleGripperStatus" type="primary">{{ gripperButtonLabel }}</el-button>
                 </div>
                 <div class="input-item">
                   <span>夹爪宽度：</span>
-                  <el-input-number v-model="gripperWidth" :min="0" :max="255"></el-input-number>
+                  <el-input-number v-model="gripperWidth" :min="0" :max="255" :disabled="gripperStatus !== '已激活'"></el-input-number>
+                  <el-button type="primary" @click="setGripperWidth" :disabled="gripperStatus !== '已激活'" style="margin-left: 10px">设置宽度</el-button>
+                  <span style="margin-left: 10px">(最小:0 | 最大:255)</span>
                 </div>
                 <div class="input-item">
                   <span>夹爪速度：</span>
-                  <el-input-number v-model="gripperSpeed" :min="0" :max="100"></el-input-number>
+                  <el-input-number v-model="gripperSpeed" :min="0" :max="255" :disabled="gripperStatus !== '已激活'"></el-input-number>
+                  <el-button type="primary" @click="setGripperWidth" :disabled="gripperStatus !== '已激活'" style="margin-left: 10px">设置速度</el-button>
+                  <span style="margin-left: 10px">(最小:0 | 最大:255)</span>
+                </div>
+                <div class="input-item">
+                  <span>夹爪力度：</span>
+                  <el-input-number v-model="gripperForce" :min="0" :max="255" :disabled="gripperStatus !== '已激活'"></el-input-number>
+                  <el-button type="primary" @click="setGripperWidth" :disabled="gripperStatus !== '已激活'" style="margin-left: 10px">设置力度</el-button>
+                  <span style="margin-left: 10px">(最小:0 | 最大:255)</span>
                 </div>
               </div>
             </div>
@@ -118,15 +128,8 @@
                         @change="handleDateChange"
                         :picker-options="pickerOptions">
                       </el-date-picker>
-                      <div>
-                        <ve-line
-                          :data="chartData"
-                          :legend-visible="false"
-                          :loading="loading"
-                          :data-empty="dataEmpty"
-                          :settings="chartSettings"></ve-line>
-                      </div>
                     </div>
+                    <div ref="chart" style="width: 100%; height: 100%;"></div>
                   </el-col>
                 </el-row>
               </div>
@@ -145,6 +148,7 @@ import HomeRobotData from '@/components/HomeRobotData.vue'
 import { str2Date } from '@/libs/data'
 import axios from 'axios'
 import RobotModel from '@/components/robotModel'
+import * as echarts from 'echarts'
 Vue.component('d2-grid-layout', GridLayout)
 Vue.component('d2-grid-item', GridItem)
 const DATA_FROM_BACKEND = {
@@ -175,6 +179,7 @@ export default {
   },
   data () {
     return {
+      chart: null,
       myValue: 3.21,
       layout: {
         layout: [
@@ -231,7 +236,7 @@ export default {
         columns: [],
         rows: []
       },
-      loading: false,
+      loading: true,
       dataEmpty: false,
       armPosition: {
         x: 0,
@@ -244,8 +249,10 @@ export default {
         rz: 0
       },
       gripperWidth: 0,
-      gripperSpeed: 0,
+      gripperSpeed: 255,
+      gripperForce: 150,
       isConnected: false,
+      gripperStatus: '未使用',
       isAsync: true,
       joints: [0, 0, 1.57, 0, 1.57, 0]
     }
@@ -253,6 +260,31 @@ export default {
   mounted () {
     // 加载完成后显示提示
     this.showInfo()
+    this.chart = echarts.init(this.$refs.chart)
+    this.chart.setOption({
+      title: {
+        text: 'ECharts 示例'
+      },
+      tooltip: {},
+      xAxis: {
+        data: ['A', 'B', 'C', 'D', 'E', 'F']
+      },
+      yAxis: {},
+      series: [{
+        name: '数量',
+        type: 'bar',
+        data: [5, 20, 36, 10, 10, 20]
+      }]
+    })
+  },
+  computed: {
+    gripperButtonLabel () {
+      if (this.gripperStatus === '未使用' || this.gripperStatus === '已激活') {
+        return '复位(重置)'
+      } else if (this.gripperStatus === '已复位') {
+        return '激活'
+      }
+    }
   },
   created () {
     this.initOrderCountDate()
@@ -314,8 +346,34 @@ export default {
           console.error('请求失败：', error)
         })
     },
-    toggleConnection () {
-      this.isConnected = !this.isConnected
+    toggleGripperStatus () {
+      if (this.gripperStatus === '未使用') {
+        this.gripperStatus = '已复位'
+        axios.post('/api/gripper/reset_gripper')
+          .then(response => {
+            this.$notify({
+              title: '成功',
+              message: '成功复位夹爪，请点击激活按钮激活夹爪！',
+              type: 'success'
+            })
+          }).catch(error => {
+            console.error('请求失败：', error)
+          })
+      } else if (this.gripperStatus === '已复位') {
+        this.gripperStatus = '已激活'
+        axios.post('/api/gripper/active_gripper')
+          .then(response => {
+            this.$notify({
+              title: '成功',
+              message: '成功激活夹爪！您现在可以控制夹爪了',
+              type: 'success'
+            })
+          }).catch(error => {
+            console.error('请求失败：', error)
+          })
+      } else if (this.gripperStatus === '已激活') {
+        this.gripperStatus = '已复位'
+      }
     },
     handleDateChange () {
       this.getData()

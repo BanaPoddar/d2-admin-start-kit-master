@@ -1224,6 +1224,13 @@
   "resolved" "https://registry.npmjs.org/@soda/get-current-script/-/get-current-script-1.0.0.tgz"
   "version" "1.0.0"
 
+"@three-ts/orbit-controls@^1.4.7":
+  "integrity" "sha512-1OVZnc2VTHCoHberL50LBbltjnqVpOBhmuJwKPqzn6sThQwvVU1E13cpuJ2SWWOMoMLF+4hE3ICi4KHsZA/CJw=="
+  "resolved" "https://registry.npmmirror.com/@three-ts/orbit-controls/-/orbit-controls-1.4.7.tgz"
+  "version" "1.4.7"
+  dependencies:
+    "three" "^0.126.1"
+
 "@types/babel__core@^7.1.0":
   "integrity" "sha512-RL62NqSFPCDK2FM1pSDH0scHpJvsXtZNiYlMB73DgPBaG1E38ZYVL+ei5EkWRbr+KC4YNiAUNBnRj+bgwpgjMw=="
   "resolved" "https://registry.npmjs.org/@types/babel__core/-/babel__core-7.1.7.tgz"
@@ -3680,8 +3687,8 @@
   "version" "1.8.26"
 
 "de-indent@^1.0.2":
-  "integrity" "sha1-sgOOhG3DO6pXlhKNCAS0VbjB4h0="
-  "resolved" "https://registry.npm.taobao.org/de-indent/download/de-indent-1.0.2.tgz"
+  "integrity" "sha512-e/1zu3xH5MQryN2zdVaF0OrdNLUbvWxzMbi+iNA6Bky7l1RoP8a2fIbRocyHclXt/arDrrR6lL3TqFD9pMQTsg=="
+  "resolved" "https://registry.npmmirror.com/de-indent/-/de-indent-1.0.2.tgz"
   "version" "1.0.2"
 
 "debug@^2.2.0":
@@ -4130,6 +4137,14 @@
   dependencies:
     "jsbn" "~0.1.0"
     "safer-buffer" "^2.1.0"
+
+"echarts@^5.5.0":
+  "integrity" "sha512-rNYnNCzqDAPCr4m/fqyUFv7fD9qIsd50S6GDFgO1DxZhncCsNsG7IfUlAlvZe5oSEQxtsjnHiUuppzccry93Xw=="
+  "resolved" "https://registry.npmmirror.com/echarts/-/echarts-5.5.0.tgz"
+  "version" "5.5.0"
+  dependencies:
+    "tslib" "2.3.0"
+    "zrender" "5.5.0"
 
 "editorconfig@^0.15.3":
   "integrity" "sha512-M9wIMFx96vq0R4F+gRpY3o2exzb8hEj/n9S8unZtHSvYjibBp/iMufSzvmOcV/laG0ZtuTVGtiJggPOSW2r93g=="
@@ -5470,7 +5485,7 @@
     "inherits" "^2.0.3"
     "minimalistic-assert" "^1.0.1"
 
-"he@^1.1.0", "he@^1.1.1", "he@1.2.x":
+"he@^1.1.1", "he@^1.2.0", "he@1.2.x":
   "integrity" "sha512-F/1DnUGPopORZi0ni+CvrCgHQ5FyEAHRLSApuYWMmrbSwoN2Mn/7k+Gl38gJnR7yyDZk6WLXwiGod1JOWNDKGw=="
   "resolved" "https://registry.npmjs.org/he/-/he-1.2.0.tgz"
   "version" "1.2.0"
@@ -10810,6 +10825,11 @@
     "loader-utils" "^1.1.0"
     "neo-async" "^2.6.0"
 
+"three@^0.126.1":
+  "integrity" "sha512-eOEXnZeE1FDV0XgL1u08auIP13jxdN9LQBAEmlErYzMxtIIfuGIAZbijOyookALUhqVzVOx0Tywj6n192VM+nQ=="
+  "resolved" "https://registry.npmmirror.com/three/-/three-0.126.1.tgz"
+  "version" "0.126.1"
+
 "three@^0.135.0":
   "integrity" "sha512-kuEpuuxRzLv0MDsXai9huCxOSQPZ4vje6y0gn80SRmQvgz6/+rI0NAvCRAw56zYaWKMGMfqKWsxF9Qa2Z9xymQ=="
   "resolved" "https://registry.npmmirror.com/three/-/three-0.135.0.tgz"
@@ -10991,6 +11011,11 @@
   "integrity" "sha512-tTSkux6IGPnUGUd1XAZHcpu85MOkIl5zX49pO+jfsie3eP0B6pyhOlLXm3cAC6T7s+euSDDUUV+Acop5WmtkVg=="
   "resolved" "https://registry.npmjs.org/tslib/-/tslib-1.11.2.tgz"
   "version" "1.11.2"
+
+"tslib@2.3.0":
+  "integrity" "sha512-N82ooyxVNm6h1riLCoyS9e3fuJ3AMG2zIZs2Gd1ATcSFjSA23Q0fzjjZeh0jbJvWVDZ0cJT8yaNNaaXHzueNjg=="
+  "resolved" "https://registry.npmmirror.com/tslib/-/tslib-2.3.0.tgz"
+  "version" "2.3.0"
 
 "tty-browserify@0.0.0":
   "integrity" "sha1-oVe6QC2iTpv5V/mqadUk7tQpAaY="
@@ -11458,13 +11483,13 @@
     "hash-sum" "^1.0.2"
     "loader-utils" "^1.0.2"
 
-"vue-template-compiler@^2.6.10":
-  "integrity" "sha512-KIq15bvQDrcCjpGjrAhx4mUlyyHfdmTaoNfeoATHLAiWB+MU3cx4lOzMwrnUh9cCxy0Lt1T11hAFY6TQgroUAA=="
-  "resolved" "https://registry.npmjs.org/vue-template-compiler/-/vue-template-compiler-2.6.11.tgz"
-  "version" "2.6.11"
+"vue-template-compiler@^2.7.16":
+  "integrity" "sha512-AYbUWAJHLGGQM7+cNTELw+KsOG9nl2CnSv467WobS5Cv9uk3wFcnr1Etsz2sEIHEZvw1U+o9mRlEO6QbZvUPGQ=="
+  "resolved" "https://registry.npmmirror.com/vue-template-compiler/-/vue-template-compiler-2.7.16.tgz"
+  "version" "2.7.16"
   dependencies:
     "de-indent" "^1.0.2"
-    "he" "^1.1.0"
+    "he" "^1.2.0"
 
 "vue-template-es2015-compiler@^1.6.0", "vue-template-es2015-compiler@^1.9.0":
   "integrity" "sha512-4gDntzrifFnCEvyoO8PqyJDmguXgVPxKiIxrBKjIowvL9l+N66196+72XVYR8BBf1Uv1Fgt3bGevJ+sEmxfZzw=="
@@ -11955,3 +11980,10 @@
     "is-ci" "^1.0.10"
     "normalize-path" "^1.0.0"
     "strip-indent" "^2.0.0"
+
+"zrender@5.5.0":
+  "integrity" "sha512-O3MilSi/9mwoovx77m6ROZM7sXShR/O/JIanvzTwjN3FORfLSr81PsUGd7jlaYOeds9d8tw82oP44+3YucVo+w=="
+  "resolved" "https://registry.npmmirror.com/zrender/-/zrender-5.5.0.tgz"
+  "version" "5.5.0"
+  dependencies:
+    "tslib" "2.3.0"
