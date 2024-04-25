@@ -86,7 +86,9 @@ export default {
       this.joints = newJoints
     },
     sliderInput (value, name) {
-      this.robot.joints[name].setJointValue(value)
+      if (this.robot && this.robot.joints[name]) {
+        this.robot.joints[name].setJointValue(value)
+      }
     },
     initBase () {
       // 创建场景
@@ -151,12 +153,12 @@ export default {
         this.robot.position.z = 1.5
         this.scene.add(this.robot)
         // 设置关节初始角度
-        this.robot.joints.shoulder_joint.setJointValue(0)
-        this.robot.joints.upperArm_joint.setJointValue(0)
-        this.robot.joints.foreArm_joint.setJointValue(1.57)
-        this.robot.joints.wrist1_joint.setJointValue(0)
-        this.robot.joints.wrist2_joint.setJointValue(1.57)
-        this.robot.joints.wrist3_joint.setJointValue(0)
+        this.robot.joints.shoulder_joint.setJointValue(this.joints[0])
+        this.robot.joints.upperArm_joint.setJointValue(this.joints[1])
+        this.robot.joints.foreArm_joint.setJointValue(this.joints[2])
+        this.robot.joints.wrist1_joint.setJointValue(this.joints[3])
+        this.robot.joints.wrist2_joint.setJointValue(this.joints[4])
+        this.robot.joints.wrist3_joint.setJointValue(this.joints[5])
       })
     },
     initPlane () {

@@ -399,6 +399,18 @@ export default {
         this.gripperStatus = '已复位'
       }
     },
+    // 设置夹爪宽度
+    setGripperWidth () {
+
+    },
+    // 设置夹爪宽度
+    setGripperSpeed () {
+
+    },
+    // 设置夹爪宽度
+    setGripperForce () {
+
+    },
     // 设置日期变化
     handleDateChange () {
       this.getChartData()

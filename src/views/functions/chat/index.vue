@@ -23,7 +23,7 @@
                 :room-actions="JSON.stringify(roomsActions)"
                 :templates-text="JSON.stringify(templatesText)"
                 :text-messages="JSON.stringify(textMessages)"
-                @send-message="adcanced_sendMessage($event.detail[0])"
+                @send-message="advanced_sendMessage($event.detail[0])"
                 @fetch-messages="fetchMessages($event.detail[0])"
                 @textarea-action-handler="voiceText($event.detail[0])"
                 @menu-action-handler="menuActionHandler($event.detail[0])"
@@ -185,7 +185,7 @@ export default {
       })
     },
     // 发送消息
-    adcanced_sendMessage (message) {
+    advanced_sendMessage (message) {
       this.messages = [
         ...this.messages,
         {
@@ -209,7 +209,7 @@ export default {
             {
               _id: this.messages.length + 1, // 确保ID是唯一的
               content: element, // 回复的消息内容
-              senderId: '1', // 这里应该是机器人或者服务器的ID
+              senderId: '1', // 机器人ID
               timestamp: new Date().toString().substring(16, 21),
               date: new Date().toDateString()
             }
