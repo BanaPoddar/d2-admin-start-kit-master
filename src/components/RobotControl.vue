@@ -35,7 +35,7 @@ export default {
     joints: {
       handler (newVal) {
         if (newVal) {
-          const jointValues = newVal.map(joint => joint.value * Math.PI / 180)
+          const jointValues = newVal.map(joint => joint.value)
           this.$emit('joints-changed', jointValues)
         }
         if (!this.isAsync) {
@@ -58,7 +58,7 @@ export default {
     sendNowJointsData () {
       if (this.joints) {
         // eslint-disable-next-line
-        const joint_values = this.joints.map(joint => joint.value * Math.PI / 180)
+        const joint_values = this.joints.map(joint => joint.value)
         console.log('joint_values:', joint_values)
         axios.post('/api/change_joint_angle', { joint_values })
           .then(response => {
@@ -78,6 +78,11 @@ export default {
       }).catch(error => {
         console.error('Error fetching gripper data:', error)
       })
+    },
+    setJoints (newValues) {
+      for (let i = 0; i < this.joints.length; i++) {
+        this.joints[i].value = newValues[i]
+      }
     }
   }
 }

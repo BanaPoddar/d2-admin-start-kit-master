@@ -37,9 +37,8 @@
             <div class="box-content">
               <div class="left-align">机械臂控制</div>
               <div class="button-container" style="margin-bottom: 20px">
-                <el-button type="primary" @click="setHomePose">设置为初始姿态</el-button>
-                <el-button type="danger">急停</el-button>
-                <el-button type="success">启动</el-button>
+                <el-button type="danger" @click="setRobotStop">机械臂急停</el-button>
+                <el-button type="primary" @click="setRobotStart">机械臂启动</el-button>
               </div>
               <hr>
               <div class="left-align">异步发送关节数据(仿真模式)</div>
@@ -57,21 +56,18 @@
                 </div>
                 <div class="input-item">
                   <span>夹爪宽度：</span>
-                  <el-input-number v-model="gripperWidth" :min="0" :max="255" :disabled="gripperStatus !== '已激活'"></el-input-number>
+                  <el-input-number v-model="gripperWidth" :min="0" :max="255" :step="10" :disabled="gripperStatus !== '已激活'"></el-input-number>
                   <el-button type="primary" @click="setGripperWidth" :disabled="gripperStatus !== '已激活'" style="margin-left: 10px">设置宽度</el-button>
-                  <span style="margin-left: 10px">(最小:0 | 最大:255)</span>
                 </div>
                 <div class="input-item">
                   <span>夹爪速度：</span>
-                  <el-input-number v-model="gripperSpeed" :min="0" :max="255" :disabled="gripperStatus !== '已激活'"></el-input-number>
+                  <el-input-number v-model="gripperSpeed" :min="0" :max="255" :step="25" :disabled="gripperStatus !== '已激活'"></el-input-number>
                   <el-button type="primary" @click="setGripperSpeed" :disabled="gripperStatus !== '已激活'" style="margin-left: 10px">设置速度</el-button>
-                  <span style="margin-left: 10px">(最小:0 | 最大:255)</span>
                 </div>
                 <div class="input-item">
                   <span>夹爪力度：</span>
-                  <el-input-number v-model="gripperForce" :min="0" :max="255" :disabled="gripperStatus !== '已激活'"></el-input-number>
+                  <el-input-number v-model="gripperForce" :min="0" :max="255" :step="25" :disabled="gripperStatus !== '已激活'"></el-input-number>
                   <el-button type="primary" @click="setGripperForce" :disabled="gripperStatus !== '已激活'" style="margin-left: 10px">设置力度</el-button>
-                  <span style="margin-left: 10px">(最小:0 | 最大:255)</span>
                 </div>
               </div>
             </div>
@@ -223,11 +219,11 @@ export default {
         rz: 0
       },
       // 机械臂关节角度数据
-      joints: [0, 0, 1.57, 0, 1.57, 0],
+      joints: [0, 0, 90, 0, 90, 0],
       // true仿真模式(异步发送关节变化数据)/false真实模式(同步发送关节变化数据)
       isAsync: true,
       // 夹爪相关数据
-      gripperWidth: 0,
+      gripperWidth: 1,
       gripperSpeed: 255,
       gripperForce: 150,
       gripperStatus: '未使用',
@@ -270,9 +266,12 @@ export default {
   mounted () {
     // 加载完成后显示页面初始提示
     this.showWelcomeInfo()
+    // 获取夹爪宽度数据
+    this.getGripperWidth()
   },
   computed: {
     // 夹爪按钮文本
+    // eslint-disable-next-line vue/return-in-computed-property
     gripperButtonLabel () {
       if (this.gripperStatus === '未使用' || this.gripperStatus === '已激活') {
         return '复位(重置)'
@@ -300,6 +299,15 @@ export default {
         message: '欢迎进入机械臂数据控制中心！'
       })
     },
+    // 获取夹爪数据
+    getGripperWidth () {
+      axios.get('/api/gripper/get_gripper_info').then(response => {
+        console.log(response.data.gripper_status)
+        this.gripperWidth = response.data.gripper_status.gPR
+      }).catch(error => {
+        console.error('Error fetching gripper data:', error)
+      })
+    },
     // 获取机械臂当前位置和姿态
     getCurrentPose () {
       axios.get('/api/get_current_pose').then(response => {
@@ -319,21 +327,31 @@ export default {
     updateJoints (newJoints) {
       this.joints = newJoints
     },
-    // 设置机械臂回到初始位置
-    setHomePose () {
-      // eslint-disable-next-line no-undef
-      const joint_values = [0, 0, 1.57, 0, 1.57, 1]
-      // 发送给后端 真实运动
-      axios.post('/api/change_joint_angle', { joint_values })
+    setRobotStop () {
+      // 传入后台的参数command为stop是急停
+      axios.post('/api/robot_control', { command: 'stop' })
         .then(response => {
-          // 给出提示
           this.$notify({
             title: '成功',
-            message: '机械臂已经回到初始位置！',
+            message: '机械臂已急停！',
             type: 'success'
           })
-          // 设置3d模型关节的值
-          // this.$refs.robotModel.handleSetModelJointValues(joint_values)
+        }).catch(error => {
+          console.error('请求失败：', error)
+        })
+    },
+    setRobotStart () {
+      this.$notify({
+        title: '提示',
+        message: '机械臂启动中，请稍等片刻...'
+      })
+      axios.post('/api/robot_control', { command: 'init' })
+        .then(response => {
+          this.$notify({
+            title: '成功',
+            message: '机械臂已成功启动！',
+            type: 'success'
+          })
         }).catch(error => {
           console.error('请求失败：', error)
         })
@@ -354,7 +372,7 @@ export default {
     },
     // 异步发送关节数据
     sendJointData () {
-      // eslint-disable-next-line no-undef
+      // eslint-disable-next-line no-undef,camelcase
       const joint_values = this.joints
       console.log('joint_values:', joint_values)
       axios.post('/api/change_joint_angle', { joint_values })
@@ -371,9 +389,9 @@ export default {
     },
     // 设置夹爪状态
     toggleGripperStatus () {
-      if (this.gripperStatus === '未使用') {
+      if (this.gripperStatus === '未使用' || this.gripperStatus === '已激活') {
         this.gripperStatus = '已复位'
-        axios.post('/api/gripper/reset_gripper')
+        axios.post('/api/gripper/change_gripper_status', { command: 'reset' })
           .then(response => {
             this.$notify({
               title: '成功',
@@ -385,7 +403,7 @@ export default {
           })
       } else if (this.gripperStatus === '已复位') {
         this.gripperStatus = '已激活'
-        axios.post('/api/gripper/active_gripper')
+        axios.post('/api/gripper/change_gripper_status', { command: 'active' })
           .then(response => {
             this.$notify({
               title: '成功',
@@ -395,21 +413,48 @@ export default {
           }).catch(error => {
             console.error('请求失败：', error)
           })
-      } else if (this.gripperStatus === '已激活') {
-        this.gripperStatus = '已复位'
+      } else {
+
       }
     },
     // 设置夹爪宽度
     setGripperWidth () {
-
+      axios.post('/api/gripper/change_gripper_status', { command: 'width', gripperData: this.gripperWidth })
+        .then(response => {
+          this.$notify({
+            title: '成功',
+            message: '成功设置夹爪宽度',
+            type: 'success'
+          })
+        }).catch(error => {
+          console.error('请求失败：', error)
+        })
     },
-    // 设置夹爪宽度
+    // 设置夹爪速度
     setGripperSpeed () {
-
+      axios.post('/api/gripper/change_gripper_status', { command: 'speed', gripperData: this.gripperSpeed })
+        .then(response => {
+          this.$notify({
+            title: '成功',
+            message: '成功设置夹爪速度',
+            type: 'success'
+          })
+        }).catch(error => {
+          console.error('请求失败：', error)
+        })
     },
-    // 设置夹爪宽度
+    // 设置夹爪力度
     setGripperForce () {
-
+      axios.post('/api/gripper/change_gripper_status', { command: 'force', gripperData: this.gripperForce })
+        .then(response => {
+          this.$notify({
+            title: '成功',
+            message: '成功设置夹爪力度',
+            type: 'success'
+          })
+        }).catch(error => {
+          console.error('请求失败：', error)
+        })
     },
     // 设置日期变化
     handleDateChange () {

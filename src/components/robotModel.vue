@@ -3,8 +3,9 @@
     <div class="common-layout">
       <el-container>
         <div id="webgl">
-          <Menu @sliderInput="sliderInput" @joints-changed="updateJoints" :isAsync="isAsync"/>
+          <Menu ref="robotControl" @sliderInput="sliderInput" @joints-changed="updateJoints" :isAsync="isAsync"/>
           <el-button class="btn" type="primary" @click="sendJointsData" v-if="isAsync">规划并执行</el-button>
+          <el-button class="btn" type="primary" @click="sendHomeJoints" v-if="isAsync" style="margin-left: 150px">设置为初始姿态</el-button>
         </div>
       </el-container>
     </div>
@@ -31,7 +32,7 @@ export default {
   data () {
     return {
       robot: null,
-      joints: [0, 0, 1.57, 0, 1.57, 0]
+      joints: [0, 0, 90, 0, 90, 0]
     }
   },
   watch: {
@@ -66,6 +67,7 @@ export default {
   methods: {
     sendJointsData () {
       console.log(this.joints)
+      // eslint-disable-next-line camelcase
       const joint_values = this.joints
       // 发送给后端 真实运动
       axios.post('/api/change_joint_angle', { joint_values })
@@ -76,8 +78,26 @@ export default {
             message: '机械臂成功执行运动！',
             type: 'success'
           })
-          // 设置3d模型关节的值
-          // this.$refs.robotModel.handleSetModelJointValues(joint_values)
+        }).catch(error => {
+          console.error('请求失败：', error)
+        })
+    },
+    sendHomeJoints () {
+      // eslint-disable-next-line camelcase
+      const joint_values = [0, 0, 90, 0, 90, 0]
+      this.$refs.robotControl.setJoints(joint_values)
+      // 发送给后端 真实运动
+      axios.post('/api/change_joint_angle', { joint_values })
+        .then(response => {
+          // eslint-disable-next-line camelcase
+          const joint_values = [0, 0, 90, 0, 90, 0].map(joint => joint * Math.PI / 180)
+          this.handleSetModelJointValues(joint_values)
+          // 给出提示
+          this.$notify({
+            title: '成功',
+            message: '机械臂成功设置为初始姿态！',
+            type: 'success'
+          })
         }).catch(error => {
           console.error('请求失败：', error)
         })
@@ -152,6 +172,8 @@ export default {
         this.robot.position.y = 0.5
         this.robot.position.z = 1.5
         this.scene.add(this.robot)
+        // 将关节角度转化为弧度制
+        this.joints = this.joints.map(joint => joint * Math.PI / 180)
         // 设置关节初始角度
         this.robot.joints.shoulder_joint.setJointValue(this.joints[0])
         this.robot.joints.upperArm_joint.setJointValue(this.joints[1])

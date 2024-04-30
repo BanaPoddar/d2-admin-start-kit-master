@@ -35,8 +35,6 @@
 import Vue from 'vue'
 import { GridLayout, GridItem } from 'vue-grid-layout'
 import VeLine from 'v-charts/lib/line.common'
-import HomeRobotData from '@/components/HomeRobotData.vue'
-import RobotModel from '@/components/robotModel.vue'
 Vue.component('d2-grid-layout', GridLayout)
 Vue.component('d2-grid-item', GridItem)
 export default {
