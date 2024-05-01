@@ -34,7 +34,7 @@ export default {
   watch: {
     joints: {
       handler (newVal) {
-        if (newVal) {
+        if (newVal && Array.isArray(newVal)) {
           const jointValues = newVal.map(joint => joint.value)
           this.$emit('joints-changed', jointValues)
         }

@@ -165,6 +165,7 @@ export default {
       const loader = new URDFLoader()
       /* loader.load('./ur5/ur5.urdf', result => { */
       loader.load('./aubo_description/urdf/aubo_i5.urdf', result => {
+        console.log(result)
         this.robot = result
         this.robot.rotation.x = Math.PI / 2
         this.robot.rotation.x *= -1

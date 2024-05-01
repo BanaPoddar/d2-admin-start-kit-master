@@ -56,7 +56,7 @@
                 </div>
                 <div class="input-item">
                   <span>夹爪宽度：</span>
-                  <el-input-number v-model="gripperWidth" :min="0" :max="255" :step="10" :disabled="gripperStatus !== '已激活'"></el-input-number>
+                  <el-input-number v-model="gripperWidth" :min="0" :max="255" :step="5" :disabled="gripperStatus !== '已激活'"></el-input-number>
                   <el-button type="primary" @click="setGripperWidth" :disabled="gripperStatus !== '已激活'" style="margin-left: 10px">设置宽度</el-button>
                 </div>
                 <div class="input-item">
@@ -267,7 +267,7 @@ export default {
     // 加载完成后显示页面初始提示
     this.showWelcomeInfo()
     // 获取夹爪宽度数据
-    this.getGripperWidth()
+    this.getGripperData()
   },
   computed: {
     // 夹爪按钮文本
@@ -300,10 +300,18 @@ export default {
       })
     },
     // 获取夹爪数据
-    getGripperWidth () {
+    getGripperData () {
       axios.get('/api/gripper/get_gripper_info').then(response => {
         console.log(response.data.gripper_status)
-        this.gripperWidth = response.data.gripper_status.gPR
+        if (response.data.gripper_status) {
+          this.gripperWidth = response.data.gripper_status.gPR
+          // 如果response.data.gripper_status.gACT和gGTO都为1，则夹爪已激活
+          if (response.data.gripper_status.gACT === 1 && response.data.gripper_status.gGTO === 1) {
+            this.gripperStatus = '已激活'
+          } else {
+            this.gripperStatus = '未使用'
+          }
+        }
       }).catch(error => {
         console.error('Error fetching gripper data:', error)
       })
@@ -311,14 +319,16 @@ export default {
     // 获取机械臂当前位置和姿态
     getCurrentPose () {
       axios.get('/api/get_current_pose').then(response => {
-        this.armPose = response.data.current_pose.deg
-        this.armPose.rx = this.armPose.rx.toFixed(5)
-        this.armPose.ry = this.armPose.ry.toFixed(5)
-        this.armPose.rz = this.armPose.rz.toFixed(5)
-        this.armPosition = response.data.current_pose.position
-        this.armPosition.x = this.armPosition.x.toFixed(5)
-        this.armPosition.y = this.armPosition.y.toFixed(5)
-        this.armPosition.z = this.armPosition.z.toFixed(5)
+        if (response.data.current_pose) {
+          this.armPose = response.data.current_pose.deg
+          this.armPose.rx = this.armPose.rx.toFixed(5)
+          this.armPose.ry = this.armPose.ry.toFixed(5)
+          this.armPose.rz = this.armPose.rz.toFixed(5)
+          this.armPosition = response.data.current_pose.position
+          this.armPosition.x = this.armPosition.x.toFixed(5)
+          this.armPosition.y = this.armPosition.y.toFixed(5)
+          this.armPosition.z = this.armPosition.z.toFixed(5)
+        }
       }).catch(error => {
         console.error('Error fetching gripper data:', error)
       })
@@ -327,8 +337,8 @@ export default {
     updateJoints (newJoints) {
       this.joints = newJoints
     },
+    // 机械臂急停
     setRobotStop () {
-      // 传入后台的参数command为stop是急停
       axios.post('/api/robot_control', { command: 'stop' })
         .then(response => {
           this.$notify({
@@ -340,6 +350,7 @@ export default {
           console.error('请求失败：', error)
         })
     },
+    // 机械臂启动
     setRobotStart () {
       this.$notify({
         title: '提示',
@@ -413,8 +424,6 @@ export default {
           }).catch(error => {
             console.error('请求失败：', error)
           })
-      } else {
-
       }
     },
     // 设置夹爪宽度
@@ -484,7 +493,7 @@ export default {
         }
         this.dataEmpty = false
         this.loading = false
-      }, 1000)
+      }, 2000)
     }
   }
 }
