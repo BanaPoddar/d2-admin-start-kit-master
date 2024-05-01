@@ -55,7 +55,6 @@ export default {
     document.getElementById('webgl').appendChild(this.renderer.domElement)
     // 开始渲染
     this.render()
-
     // 窗口大小处理
     window.addEventListener('resize', () => {
       this.camera.aspect = window.innerWidth / window.innerHeight
@@ -65,6 +64,10 @@ export default {
     })
   },
   methods: {
+    setGripperModelWidth (width) {
+      this.robot.joints.right_finger_joint.setJointValue(width / 255)
+      this.robot.joints.finger_joint.setJointValue(width / 255)
+    },
     sendJointsData () {
       console.log(this.joints)
       // eslint-disable-next-line camelcase
@@ -85,10 +88,10 @@ export default {
     sendHomeJoints () {
       // eslint-disable-next-line camelcase
       const joint_values = [0, 0, 90, 0, 90, 0]
-      this.$refs.robotControl.setJoints(joint_values)
       // 发送给后端 真实运动
       axios.post('/api/change_joint_angle', { joint_values })
         .then(response => {
+          this.$refs.robotControl.setJoints([0, 0, 90, 0, 90, 0])
           // eslint-disable-next-line camelcase
           const joint_values = [0, 0, 90, 0, 90, 0].map(joint => joint * Math.PI / 180)
           this.handleSetModelJointValues(joint_values)
@@ -163,7 +166,6 @@ export default {
     initRobot () {
       // 加载模型
       const loader = new URDFLoader()
-      /* loader.load('./ur5/ur5.urdf', result => { */
       loader.load('./aubo_description/urdf/aubo_i5.urdf', result => {
         console.log(result)
         this.robot = result
@@ -187,15 +189,12 @@ export default {
     initPlane () {
       // 创建一个平面几何体，长宽都为1
       const geometry = new THREE.PlaneGeometry(1, 1)
-      // 创建一个基本材质，并设置其颜色
       const material = new THREE.MeshBasicMaterial({ color: 0x000000, side: THREE.DoubleSide })
-      // 创建一个网格，将几何体和材质结合在一起
       const plane = new THREE.Mesh(geometry, material)
       // 设置平面的位置，使其位于模型的原点
       plane.position.set(-1.5, 0.5, 1.5)
       // 旋转平面使其平行于xz平面
       plane.rotation.x = Math.PI / 2
-      // 将平面添加到场景中
       this.scene.add(plane)
     },
     handleSetModelJointValues (jointValues) {

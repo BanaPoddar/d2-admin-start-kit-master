@@ -430,6 +430,7 @@ export default {
     setGripperWidth () {
       axios.post('/api/gripper/change_gripper_status', { command: 'width', gripperData: this.gripperWidth })
         .then(response => {
+          this.$refs.robotModel[0].setGripperModelWidth(this.gripperWidth)
           this.$notify({
             title: '成功',
             message: '成功设置夹爪宽度',
