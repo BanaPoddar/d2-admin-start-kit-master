@@ -1,6 +1,6 @@
 <template>
   <d2-container type="card">
-    <template slot="header">姿态同步</template>
+    <template>姿态同步</template>
     <div style="height: 900px; margin: -16px;">
       <SplitPane :min-percent='20' :default-percent='36' split="vertical">
         <!--左侧画面 姿态摄像头画面/注意事项/开始结束同步按钮 -->
