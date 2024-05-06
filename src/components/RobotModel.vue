@@ -184,6 +184,8 @@ export default {
         this.robot.joints.wrist1_joint.setJointValue(this.joints[3])
         this.robot.joints.wrist2_joint.setJointValue(this.joints[4])
         this.robot.joints.wrist3_joint.setJointValue(this.joints[5])
+        // 设置OrbitControls的target为机械臂模型的位置
+        // this.controls.target.set(this.robot.position.x, this.robot.position.y, this.robot.position.z)
       })
     },
     initPlane () {

@@ -154,7 +154,7 @@ import { GridLayout, GridItem } from 'vue-grid-layout'
 import HomeRobotData from '@/components/HomeRobotData.vue'
 import { str2Date } from '@/libs/data'
 import axios from 'axios'
-import RobotModel from '@/components/robotModel'
+import RobotModel from '@/components/RobotModel.vue'
 import VeLine from 'v-charts/lib/line.common'
 Vue.component('d2-grid-layout', GridLayout)
 Vue.component('d2-grid-item', GridItem)
@@ -266,7 +266,7 @@ export default {
   mounted () {
     // 加载完成后显示页面初始提示
     this.showWelcomeInfo()
-    // 获取夹爪宽度数据
+    // 获取夹爪宽度等数据
     this.getGripperData()
   },
   computed: {
