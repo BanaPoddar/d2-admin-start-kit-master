@@ -126,6 +126,8 @@ export default {
   data: function () {
     return {
       isCameraActive: true, // 摄像头是否激活状态(不为灰)
+      messageShown: false, // 是否在镜头内消息显示
+      source: axios.CancelToken.source(),
       videoFeedUrl: '/api/camera/pose', // 后端姿态摄像头画面的URL
       anglesData: [], // 人体姿态数据
       calculateData: [], // 人体姿态预测数据
@@ -143,6 +145,10 @@ export default {
   mounted () {
     // 加载完成后显示欢迎提示
     this.showWelcomeInfo()
+  },
+  beforeDestroy () {
+    this.source.cancel()
+    this.messageShown = false
   },
   created () {
     this.fetchPoseData() // 获取人体姿态相关数据
@@ -162,7 +168,9 @@ export default {
     },
     // 获取人体姿态相关数据
     fetchPoseData () {
-      axios.get('/api/sync/get_sync_data')
+      axios.get('/api/sync/get_sync_data', {
+        cancelToken: this.source.token
+      })
         .then(response => {
           this.anglesData = response.data.data // 将后台返回的数据赋值给anglesData变量
           // 保留三位小数
@@ -190,12 +198,16 @@ export default {
           }
           if (this.anglesData[0] < 50 || this.anglesData[0] > 180 || this.anglesData[1] < 65 || this.anglesData[1] > 150) {
             this.isCameraActive = false
-            this.$message({
-              message: '请站起来背起右臂，保证左臂在摄像头画面内',
-              type: 'warning'
-            })
+            if (!this.messageShown) {
+              this.$message({
+                message: '请站起来背起右臂，保证左臂在摄像头画面内直到画面亮起',
+                type: 'warning'
+              })
+              this.messageShown = true
+            }
           } else {
             this.isCameraActive = true
+            this.messageShown = false
           }
         })
         .catch(error => {
