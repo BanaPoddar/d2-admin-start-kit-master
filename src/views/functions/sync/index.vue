@@ -9,14 +9,14 @@
             <!--左上画面 姿态摄像头画面 -->
             <template slot="paneL">
               <div style="margin: 10px;">
-                <img :src="videoFeedUrl" style="width: 100%; height: 100%;" :class="{ 'grayscale': !isCameraActive }" />
+                <img :src="videoFeedUrl" style="width: 100%; height: 100%;" :class="{ 'grayscale': !isCameraActive }"  alt=""/>
               </div>
             </template>
             <template slot="paneR">
               <SplitPane split="horizontal" :default-percent='30'>
                 <!--左中画面 注意事项 -->
                 <template slot="paneL">
-                  <el-tag size="mini" type="info" slot="header">注意事项</el-tag>
+                  <el-tag size="mini" type="info">注意事项</el-tag>
                   <div style="margin: 10px;">
                     <div>1.点击“开始同步”后，请站起来<span style="font-weight: bold; color: red;">背起右臂</span>，保证<span style="font-weight: bold; color: red;">左臂</span>在摄像头画面内</div>
                     <div>当大臂身体的夹角[60,150]内，肘关节夹角在[50,180]内时，机械臂开始同步</div>
@@ -247,7 +247,7 @@ export default {
     // 开始同步
     startSync () {
       axios.post('/api/sync/start_sync_pose')
-        .then(response => {
+        .then(() => {
           this.$message({
             message: '开始同步,请站起来背起右臂，保证左臂在摄像头画面内\n' +
               '当大臂身体的夹角[60,150]内，肘关节夹角在[50,180]内时，机械臂开始同步',
@@ -261,7 +261,7 @@ export default {
     // 退出同步
     stopSync () {
       axios.post('/api/sync/stop_sync_pose')
-        .then(response => {
+        .then(() => {
           this.$message({
             message: '退出同步',
             type: 'success'
