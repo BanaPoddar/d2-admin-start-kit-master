@@ -9,7 +9,8 @@
             <!--左上画面 姿态摄像头画面 -->
             <template slot="paneL">
               <div style="margin: 10px;">
-                <img :src="videoFeedUrl" style="width: 100%; height: 100%;" :class="{ 'grayscale': !isCameraActive }"  alt=""/>
+                <!--:class="{ 'grayscale': !isCameraActive }" -->
+                <img :src="videoFeedUrl" style="width: 100%; height: 100%;" :class="{ 'grayscale': false }"  alt=""/>
               </div>
             </template>
             <template slot="paneR">
@@ -42,10 +43,10 @@
                 <!--显示每行4个数据-->
                 <el-row :gutter="4">
                   <el-col :span="6">
-                    <sync-data :value="anglesData[1]" label="大臂-身体角度" />
+                    <sync-data :value="anglesData[1]" label="肩关节角度" />
                   </el-col>
                   <el-col :span="6">
-                    <sync-data :value="anglesData[0]" label="左臂肘关节角度" />
+                    <sync-data :value="anglesData[0]" label="肘关节角度" />
                   </el-col>
                   <el-col :span="6">
                     <sync-data :value="anglesData[2]" label="大拇指-食指宽度" />
@@ -237,7 +238,7 @@ export default {
       // 使用axios或其他方法从后台获取夹爪相关数据
       axios.get('/api/gripper/get_gripper_info')
         .then(response => {
-          this.gripperData = response.data.gripper_gPR // 将夹爪相关数据赋值给gripperData变量
+          this.gripperData = response.data.gripper_status.gPR // 将夹爪相关数据赋值给gripperData变量
           this.errorData.gripper = Math.abs(this.gripperData - this.calculateData[0]).toFixed(3)
         })
         .catch(error => {
