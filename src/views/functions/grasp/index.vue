@@ -26,6 +26,10 @@
           </template>
           <!--卡片3 待抓取物品列表-->
           <template v-if="item.i === '2'">
+            <el-dialog :visible.sync="dialogVisible" title="抓取进度">
+              <el-progress :percentage="progress"></el-progress>
+              <span>{{ progressStatus }}</span>
+            </el-dialog>
             <el-tag size="mini" type="info" slot="header">{{ Number(item.i) + 1 }}.待抓取物品列表 </el-tag>
             <div class="item-list">
               <el-card v-for="item in itemList" :key="item.id" class="item-card">
@@ -37,7 +41,7 @@
                     <p><strong>置信度:</strong> {{ item.confidence }}</p>
                     <p><strong>位置:</strong> {{ item.position }}</p>
                   </div>
-                  <el-button type="primary" @click="graspItem(item.class)" style="margin-left:300px;">抓取</el-button>
+                  <el-button type="primary" @click="graspItem(item.class,item.position)" style="margin-left:300px;">抓取</el-button>
                 </div>
               </el-card>
             </div>
@@ -46,6 +50,15 @@
           <template v-if="item.i === '3'">
             <el-tag size="mini" type="info" slot="header"> {{ Number(item.i) + 1 }}.功能区</el-tag>
             <div style="display: flex; align-items: center; margin-left: 30px">
+              <el-button type="primary" @click="refreshItemList" style="margin-right: 20px;">刷新列表</el-button>
+              <el-select v-model="selectedType" placeholder="选择类型" style="margin-right: 20px;width: 100px">
+                <el-option label="瓶子" value="bottle"></el-option>
+                <el-option label="罐子" value="can"></el-option>
+                <el-option label="盒子" value="box"></el-option>
+                <el-option label="胶带" value="tape"></el-option>
+                <el-option label="全部" value="all"></el-option>
+              </el-select>
+              <el-button type="primary" @click="graspAllOfType" style="margin-right: 20px">抓取全部</el-button>
               <el-switch v-model="shouldPlaceAfterGrasp" active-text="需要抓取后放置" style="margin-right: 20px;"></el-switch>
               <el-radio-group v-if="shouldPlaceAfterGrasp" v-model="defaultChose">
                 <el-radio label="blue" style="margin-right: 10px;">放到蓝色框</el-radio>
@@ -91,7 +104,11 @@ export default {
       logs: [], // 抓取/放置日志数据
       itemList: [], // 待抓取物品列表数据
       shouldPlaceAfterGrasp: false, // 默认值为 false，表示不需要在抓取后放置
-      defaultChose: 'blue' // 默认值为空字符串，表示没有默认的放置位置
+      defaultChose: 'blue', // 默认值为空字符串，表示没有默认的放置位置
+      selectedType: 'bottle', // 抓取指定类别的全部物品
+      dialogVisible: false, // 控制抓取弹窗的显示
+      progress: 0, // 控制进度条的进度
+      progressStatus: '' // 显示在进度条旁边的状态信息
     }
   },
   mounted () {
@@ -156,25 +173,71 @@ export default {
         })
     },
     // 指定物品抓取/指定位置放置
-    graspItem (name) {
+    async graspItem (name, position) {
+      console.log(position)
       let place = 'none'
       if (this.shouldPlaceAfterGrasp) {
         place = this.defaultChose
       }
       try {
-        console.log('抓取物品:', name, '放置位置:', place)
-        const response = axios.post('/api/grasp/startItemGrasp', null, {
+        console.log('抓取物品:', name, '放置位置:', place, '抓取位置:', position)
+        this.dialogVisible = true
+        this.progress = 30
+        this.progressStatus = '识别物体中...'
+        // eslint-disable-next-line no-async-promise-executor
+        const progressPromise = new Promise(async (resolve, reject) => {
+          await new Promise(resolve => setTimeout(resolve, 3000))
+          this.progress = 50
+          this.progressStatus = '计算抓取点位姿中...'
+          await new Promise(resolve => setTimeout(resolve, 3000))
+          this.progress = 90
+          this.progressStatus = '等待抓取完成...'
+          resolve()
+        })
+        const requestPromise = await axios.post('/api/grasp/startPosGrasp', { position: position }, {
           params: {
             item: name,
             place: place
           }
         })
-        // 处理后端返回的消息
-        const msg = response.data.msg
-        console.log('后端返回消息:', msg)
+        const result = await Promise.race([progressPromise, requestPromise])
+        if (result && result.status === 200) {
+          this.dialogVisible = false
+          this.$message({
+            message: '抓取成功!',
+            type: 'success'
+          })
+        } else {
+          this.dialogVisible = false
+          this.$message({
+            message: '抓取失败',
+            type: 'error'
+          })
+        }
       } catch (error) {
-        console.error('抓取物品失败:', error)
+        console.error('Error starting sync:', error)
+        this.dialogVisible = false
       }
+    },
+    // 刷新物品列表
+    refreshItemList () {
+      this.fetchItems()
+    },
+    // 抓取选中类型的所有物品
+    graspAllOfType () {
+      // 创建一个新的数组来存储选定类型的所有物品的位置信息
+      const selectedItemsPositions = []
+      // 遍历 itemList 数组
+      for (const item of this.itemList) {
+        // 检查物品的 class 属性是否与选定的类型匹配
+        if (item.class === this.selectedType || this.selectedType === 'all') {
+          // 如果匹配，那么将物品的位置信息添加到新的数组中
+          selectedItemsPositions.push({ type: item.class, position: item.position })
+        }
+      }
+      // 打印选定类型的所有物品的位置信息
+      console.log(selectedItemsPositions)
+      axios.post('/api/grasp/startMultiGrasp', { itemList: selectedItemsPositions })
     }
   }
 }

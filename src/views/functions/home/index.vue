@@ -302,7 +302,6 @@ export default {
     // 获取夹爪数据
     getGripperData () {
       axios.get('/api/gripper/get_gripper_info').then(response => {
-        console.log(response.data.gripper_status)
         if (response.data.gripper_status) {
           this.gripperWidth = response.data.gripper_status.gPR
           // 如果response.data.gripper_status.gACT和gGTO都为1，则夹爪已激活
