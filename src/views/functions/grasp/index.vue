@@ -88,8 +88,8 @@ export default {
         layout: [
           { x: 0, y: 0, w: 5, h: 10, i: '0' },
           { x: 0, y: 12, w: 5, h: 10, i: '1' },
-          { x: 5, y: 0, w: 7, h: 16, i: '2' },
-          { x: 5, y: 17, w: 7, h: 4, i: '3' }
+          { x: 5, y: 0, w: 7, h: 15, i: '2' },
+          { x: 5, y: 16, w: 7, h: 5, i: '3' }
         ],
         colNum: 12,
         rowHeight: 30,
@@ -204,7 +204,7 @@ export default {
         if (result && result.status === 200) {
           this.dialogVisible = false
           this.$message({
-            message: '抓取成功!',
+            message: '成功发送抓取命令!',
             type: 'success'
           })
         } else {
@@ -224,20 +224,91 @@ export default {
       this.fetchItems()
     },
     // 抓取选中类型的所有物品
-    graspAllOfType () {
+    /*    graspAllOfType () {
+      let place = 'none'
+      if (this.shouldPlaceAfterGrasp) {
+        place = this.defaultChose
+      }
       // 创建一个新的数组来存储选定类型的所有物品的位置信息
       const selectedItemsPositions = []
       // 遍历 itemList 数组
-      for (const item of this.itemList) {
-        // 检查物品的 class 属性是否与选定的类型匹配
-        if (item.class === this.selectedType || this.selectedType === 'all') {
-          // 如果匹配，那么将物品的位置信息添加到新的数组中
-          selectedItemsPositions.push({ type: item.class, position: item.position })
+      if (this.itemList.length !== 0) {
+        for (const item of this.itemList) {
+          // 检查物品的 class 属性是否与选定的类型匹配
+          if (item.class === this.selectedType || this.selectedType === 'all') {
+            // 如果匹配，那么将物品的位置信息添加到新的数组中
+            selectedItemsPositions.push({ type: item.class, position: item.position })
+          }
         }
+        // 打印选定类型的所有物品的位置信息
+        console.log(selectedItemsPositions)
+        axios.post('/api/grasp/startMultiGrasp', { itemList: selectedItemsPositions, place: place }
+          .then(response => {
+            // eslint-disable-next-line no-undef
+            const responseData = JSON.parse(response.data.data)
+            const items = Array.isArray(responseData) ? responseData : []
+            // 更新 itemList
+            this.itemList = items.map(item => ({
+              id: item.id,
+              class: item.class,
+              color: item.color,
+              position: item.position,
+              confidence: item.confidence,
+              imageURL: 'data:image/png;base64,' + item.image // 假设 "image" 包含 Base64 编码的图像数据
+            }))
+          })
+        )
       }
-      // 打印选定类型的所有物品的位置信息
-      console.log(selectedItemsPositions)
-      axios.post('/api/grasp/startMultiGrasp', { itemList: selectedItemsPositions })
+    } */
+
+    // 抓取选中类型的所有物品
+    async graspAllOfType () {
+      let place = 'none'
+      if (this.shouldPlaceAfterGrasp) {
+        place = this.defaultChose
+      }
+      // 创建一个新的数组来存储选定类型的所有物品的位置信息
+      const selectedItemsPositions = []
+      // 遍历 itemList 数组
+      if (this.itemList.length !== 0) {
+        for (const item of this.itemList) {
+          // 检查物品的 class 属性是否与选定的类型匹配
+          if (item.class === this.selectedType || this.selectedType === 'all') {
+            // 如果匹配，那么将物品的位置信息添加到新的数组中
+            selectedItemsPositions.push({ type: item.class, position: item.position })
+          }
+        }
+        // 打印选定类型的所有物品的位置信息
+        console.log(selectedItemsPositions)
+        if (selectedItemsPositions.length === 0) {
+          this.dialogVisible = false
+          this.$message({
+            message: '无抓取物品!',
+            type: 'success'
+          })
+          return
+        }
+        await axios.post('/api/grasp/startMultiGrasp', { itemList: selectedItemsPositions, place: place })
+          .then(response => {
+            console.log(response)
+            // eslint-disable-next-line no-undef
+            const responseData = JSON.parse(response.data.data)
+            const items = Array.isArray(responseData) ? responseData : []
+            // 更新 itemList
+            this.itemList = items.map(item => ({
+              id: item.id,
+              class: item.class,
+              color: item.color,
+              position: item.position,
+              confidence: item.confidence,
+              imageURL: 'data:image/png;base64,' + item.image // 假设 "image" 包含 Base64 编码的图像数据
+            }))
+            this.graspAllOfType()
+          })
+          .catch(error => {
+            console.error('Error making request:', error)
+          })
+      }
     }
   }
 }
@@ -280,15 +351,12 @@ export default {
         object-fit: cover;
         margin-right: 10px;
       }
-
       .item-details {
         flex: 1;
       }
-
       .item-details p {
         margin: 5px 0;
       }
-
       .item-details p strong {
         font-weight: bold;
       }

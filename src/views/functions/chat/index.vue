@@ -218,18 +218,6 @@ export default {
       }).catch(error => {
         console.log(error)
       })
-      if (message.content === '你好') {
-        this.messages = [
-          ...this.messages,
-          {
-            _id: this.messages.length + 1, // 确保ID是唯一的
-            content: '你好', // 回复的消息内容
-            senderId: '1', // 这里应该是机器人或者服务器的ID
-            timestamp: new Date().toString().substring(16, 21),
-            date: new Date().toDateString()
-          }
-        ]
-      }
     },
     // 添加新消息
     addNewMessage () {

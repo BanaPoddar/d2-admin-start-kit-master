@@ -53,10 +53,12 @@
                   <span>夹爪状态：</span>
                   <el-tag :type="gripperStatus === '未使用' ? 'info' : gripperStatus === '已复位' ? 'warning' : 'success'" class="tag-spacing">{{ gripperStatus }}</el-tag>
                   <el-button @click="toggleGripperStatus" type="primary">{{ gripperButtonLabel }}</el-button>
+                  <el-button type="primary" @click="setGripperOpen" :disabled="gripperStatus !== '已激活'" style="margin-left: 10px">张开</el-button>
+                  <el-button type="primary" @click="setGripperClose" :disabled="gripperStatus !== '已激活'" style="margin-left: 10px">闭合</el-button>
                 </div>
                 <div class="input-item">
                   <span>夹爪宽度：</span>
-                  <el-input-number v-model="gripperWidth" :min="0" :max="255" :step="5" :disabled="gripperStatus !== '已激活'"></el-input-number>
+                  <el-input-number v-model="gripperWidth" :min="0" :max="255" :step="10" :disabled="gripperStatus !== '已激活'"></el-input-number>
                   <el-button type="primary" @click="setGripperWidth" :disabled="gripperStatus !== '已激活'" style="margin-left: 10px">设置宽度</el-button>
                 </div>
                 <div class="input-item">
@@ -427,6 +429,36 @@ export default {
     },
     // 设置夹爪宽度
     setGripperWidth () {
+      axios.post('/api/gripper/change_gripper_status', { command: 'width', gripperData: this.gripperWidth })
+        .then(response => {
+          this.$refs.robotModel[0].setGripperModelWidth(this.gripperWidth)
+          this.$notify({
+            title: '成功',
+            message: '成功设置夹爪宽度',
+            type: 'success'
+          })
+        }).catch(error => {
+          console.error('请求失败：', error)
+        })
+    },
+    // 设置夹爪宽度
+    setGripperOpen () {
+      this.gripperWidth = 0
+      axios.post('/api/gripper/change_gripper_status', { command: 'width', gripperData: this.gripperWidth })
+        .then(response => {
+          this.$refs.robotModel[0].setGripperModelWidth(this.gripperWidth)
+          this.$notify({
+            title: '成功',
+            message: '成功设置夹爪宽度',
+            type: 'success'
+          })
+        }).catch(error => {
+          console.error('请求失败：', error)
+        })
+    },
+    // 设置夹爪宽度
+    setGripperClose () {
+      this.gripperWidth = 255
       axios.post('/api/gripper/change_gripper_status', { command: 'width', gripperData: this.gripperWidth })
         .then(response => {
           this.$refs.robotModel[0].setGripperModelWidth(this.gripperWidth)
